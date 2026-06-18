@@ -698,39 +698,39 @@ function initTabs(){
 function initStats(){
   var s=D.stats.supply;
   document.getElementById('statSupply').innerHTML =
-    '<div class="stat-card"><div class="val" style="color:#0f766e;">'+(s.totalPiles/10000).toFixed(1)+'<span style="font-size:16px">万</span></div><div class="lbl">监测充电桩总数</div><div class="chg chg-up">覆盖全市12家运营商</div></div>'+
-    '<div class="stat-card"><div class="val" style="color:#d92d20;">'+s.shortageGrids+'<span style="font-size:16px">个</span></div><div class="lbl">供给不足网格</div><div class="chg chg-down">供需比＜0.5，需重点关注</div></div>'+
-    '<div class="stat-card"><div class="val" style="color:#dc6803;">'+s.tightGrids+'<span style="font-size:16px">个</span></div><div class="lbl">供给偏紧网格</div><div class="chg chg-warn">供需比 0.5–0.8</div></div>'+
-    '<div class="stat-card"><div class="val" style="color:#079455;">'+s.vehiclePileRatio+'</div><div class="lbl">全市车桩比</div><div class="chg chg-up">全国领先水平</div></div>'+
-    '<div class="stat-card"><div class="val" style="color:#0f766e;">'+s.utilizationRate+'<span style="font-size:16px">%</span></div><div class="lbl">整体利用率</div><div class="chg chg-up">较上季度 +2.3%</div></div>'+
-    '<div class="stat-card"><div class="val" style="color:#667085;">'+s.excessGrids+'<span style="font-size:16px">个</span></div><div class="lbl">供给过剩网格</div><div class="chg" style="color:#64748b">供需比＞1.2，建议控制新建</div></div>';
+    '<div class="stat-card accent-teal"><div class="val">'+(s.totalPiles/10000).toFixed(1)+'<span class="unit"> 万</span></div><div class="lbl">监测充电桩总数</div><div class="sub">覆盖全市12家运营商</div></div>'+
+    '<div class="stat-card accent-red"><div class="val">'+s.shortageGrids+'<span class="unit"> 个</span></div><div class="lbl">供给不足网格</div><div class="sub">供需比 ＜0.5，需重点关注</div></div>'+
+    '<div class="stat-card accent-amber"><div class="val">'+s.tightGrids+'<span class="unit"> 个</span></div><div class="lbl">供给偏紧网格</div><div class="sub">供需比 0.5–0.8</div></div>'+
+    '<div class="stat-card accent-green"><div class="val">'+s.vehiclePileRatio+'</div><div class="lbl">全市车桩比</div><div class="sub">全国领先水平</div></div>'+
+    '<div class="stat-card accent-teal"><div class="val">'+s.utilizationRate+'<span class="unit">%</span></div><div class="lbl">整体利用率</div><div class="sub">较上季度 +2.3%</div></div>'+
+    '<div class="stat-card accent-slate"><div class="val">'+s.excessGrids+'<span class="unit"> 个</span></div><div class="lbl">供给过剩网格</div><div class="sub">供需比 ＞1.2，建议控制新建</div></div>';
 
   var a=D.stats.attribution;
   document.getElementById('statAttr').innerHTML =
-    '<div class="stat-card"><div class="val" style="color:#d92d20;">'+a.totalLowEfficiency.toLocaleString()+'<span style="font-size:16px">个</span></div><div class="lbl">识别低效桩</div><div class="chg chg-down">占总量 8.0%</div></div>'+
-    '<div class="stat-card"><div class="val" style="color:#d92d20;">'+a.faultCount+'</div><div class="lbl">设备故障</div><div class="lbl" style="color:#94a3b8">已通知运营商修复</div></div>'+
-    '<div class="stat-card"><div class="val" style="color:#d92d20;">'+a.competeCount+'</div><div class="lbl">周边竞争</div><div class="lbl" style="color:#94a3b8">竞品冲击致分流</div></div>'+
-    '<div class="stat-card"><div class="val" style="color:#dc6803;">'+a.accessCount+'</div><div class="lbl">可达性下降</div><div class="lbl" style="color:#94a3b8">道路/出入口变化</div></div>'+
-    '<div class="stat-card"><div class="val" style="color:#667085;">'+a.bizCount+'</div><div class="lbl">业态变化</div><div class="lbl" style="color:#94a3b8">周边商业/人口减少</div></div>'+
-    '<div class="stat-card"><div class="val" style="color:#079455;">'+a.priceCount+'</div><div class="lbl">价格因素</div><div class="lbl" style="color:#94a3b8">收费高于周边均价</div></div>';
+    '<div class="stat-card accent-red"><div class="val">'+a.totalLowEfficiency.toLocaleString()+'<span class="unit"> 个</span></div><div class="lbl">识别低效桩</div><div class="sub">占总量 8.0%</div></div>'+
+    '<div class="stat-card accent-red"><div class="val">'+a.faultCount+'</div><div class="lbl">设备故障</div><div class="sub">已通知运营商修复</div></div>'+
+    '<div class="stat-card accent-red"><div class="val">'+a.competeCount+'</div><div class="lbl">周边竞争</div><div class="sub">竞品冲击致分流</div></div>'+
+    '<div class="stat-card accent-amber"><div class="val">'+a.accessCount+'</div><div class="lbl">可达性下降</div><div class="sub">道路/出入口变化</div></div>'+
+    '<div class="stat-card accent-slate"><div class="val">'+a.bizCount+'</div><div class="lbl">业态变化</div><div class="sub">周边商业/人口减少</div></div>'+
+    '<div class="stat-card accent-green"><div class="val">'+a.priceCount+'</div><div class="lbl">价格因素</div><div class="sub">收费高于周边均价</div></div>';
 
   var v=D.stats.verify;
   document.getElementById('statVerify').innerHTML =
-    '<div class="stat-card"><div class="val" style="color:#0f766e;">'+v.operatorCount+'<span style="font-size:16px">家</span></div><div class="lbl">接入运营商</div><div class="chg chg-up">市级平台全覆盖</div></div>'+
-    '<div class="stat-card"><div class="val" style="color:#d92d20;">'+v.highDeviationRate+'<span style="font-size:16px">%</span></div><div class="lbl">申报偏离度＞15%的站点</div><div class="chg chg-down">共1,924个站点</div></div>'+
-    '<div class="stat-card"><div class="val" style="color:#dc6803;">'+v.midDeviationRate+'<span style="font-size:16px">%</span></div><div class="lbl">申报偏离度10%–15%的站点</div><div class="chg chg-warn">共716个站点</div></div>'+
-    '<div class="stat-card"><div class="val" style="color:#079455;">'+v.normalRate+'<span style="font-size:16px">%</span></div><div class="lbl">申报与基准一致</div><div class="chg chg-up">共20,460个站点</div></div>'+
-    '<div class="stat-card"><div class="val" style="color:#d92d20;">'+v.contradictionSites+'<span style="font-size:16px">个</span></div><div class="lbl">状态矛盾站点</div><div class="chg chg-down">API显示故障但有充电记录</div></div>'+
-    '<div class="stat-card"><div class="val" style="color:#0f766e;">'+v.reportCycle+'</div><div class="lbl">核验报告周期</div><div class="lbl" style="color:#64748b">自动生成并推送</div></div>';
+    '<div class="stat-card accent-teal"><div class="val">'+v.operatorCount+'<span class="unit"> 家</span></div><div class="lbl">接入运营商</div><div class="sub">市级平台全覆盖</div></div>'+
+    '<div class="stat-card accent-red"><div class="val">'+v.highDeviationRate+'<span class="unit">%</span></div><div class="lbl">申报偏离度 ＞15%</div><div class="sub">共1,924个站点</div></div>'+
+    '<div class="stat-card accent-amber"><div class="val">'+v.midDeviationRate+'<span class="unit">%</span></div><div class="lbl">申报偏离度 10%–15%</div><div class="sub">共716个站点</div></div>'+
+    '<div class="stat-card accent-green"><div class="val">'+v.normalRate+'<span class="unit">%</span></div><div class="lbl">申报与基准一致</div><div class="sub">共20,460个站点</div></div>'+
+    '<div class="stat-card accent-red"><div class="val">'+v.contradictionSites+'<span class="unit"> 个</span></div><div class="lbl">状态矛盾站点</div><div class="sub">API显示故障但有充电记录</div></div>'+
+    '<div class="stat-card accent-teal"><div class="val">'+v.reportCycle+'</div><div class="lbl">核验报告周期</div><div class="sub">自动生成并推送</div></div>';
 
   var r=D.report.q2Summary;
   document.getElementById('statReport').innerHTML =
-    '<div class="stat-card"><div class="val" style="color:#0f766e;">'+r.totalKwh.toLocaleString()+'<span style="font-size:16px">万</span></div><div class="lbl">Q2总充电量（kWh）</div><div class="chg chg-up">同比 +18.3%</div></div>'+
-    '<div class="stat-card"><div class="val" style="color:#079455;">'+r.supplyDemandAvg+'</div><div class="lbl">全市供需比均值</div><div class="chg chg-up">较Q1 +0.04</div></div>'+
-    '<div class="stat-card"><div class="val" style="color:#dc6803;">'+r.complianceRate+'<span style="font-size:16px">%</span></div><div class="lbl">补贴申报合规率</div><div class="chg chg-up">较Q1 +1.7%</div></div>'+
-    '<div class="stat-card"><div class="val" style="color:#d92d20;">'+r.lowEffPiles.toLocaleString()+'</div><div class="lbl">低效桩数量</div><div class="chg chg-down">较Q1 +5.2%</div></div>'+
-    '<div class="stat-card"><div class="val" style="color:#667085;">'+r.shortageGrids+'<span style="font-size:16px">个</span></div><div class="lbl">供给不足网格</div><div class="chg chg-up">较Q1 −3个（治理见效）</div></div>'+
-    '<div class="stat-card"><div class="val" style="color:#d92d20;">'+r.anomalySites+'<span style="font-size:16px">个</span></div><div class="lbl">交叉验证标记异常</div><div class="chg chg-warn">需重点核查</div></div>';
+    '<div class="stat-card accent-teal"><div class="val">'+r.totalKwh.toLocaleString()+'<span class="unit"> 万</span></div><div class="lbl">Q2 总充电量（kWh）</div><div class="sub">同比 +18.3%</div></div>'+
+    '<div class="stat-card accent-green"><div class="val">'+r.supplyDemandAvg+'</div><div class="lbl">全市供需比均值</div><div class="sub">较 Q1 +0.04</div></div>'+
+    '<div class="stat-card accent-amber"><div class="val">'+r.complianceRate+'<span class="unit">%</span></div><div class="lbl">补贴申报合规率</div><div class="sub">较 Q1 +1.7%</div></div>'+
+    '<div class="stat-card accent-red"><div class="val">'+r.lowEffPiles.toLocaleString()+'</div><div class="lbl">低效桩数量</div><div class="sub">较 Q1 +5.2%</div></div>'+
+    '<div class="stat-card accent-slate"><div class="val">'+r.shortageGrids+'<span class="unit"> 个</span></div><div class="lbl">供给不足网格</div><div class="sub">较 Q1 −3 个（治理见效）</div></div>'+
+    '<div class="stat-card accent-red"><div class="val">'+r.anomalySites+'<span class="unit"> 个</span></div><div class="lbl">交叉验证标记异常</div><div class="sub">需重点核查</div></div>';
 }
 
 // =============================================================
