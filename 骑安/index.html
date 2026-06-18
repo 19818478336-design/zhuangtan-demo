@@ -1,0 +1,753 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>「骑安」——外卖骑手安全"黑点"识别与主动预警系统</title>
+<script src="https://cdn.jsdelivr.net/npm/echarts@5.5.0/dist/echarts.min.js"></script>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'Microsoft YaHei','PingFang SC',sans-serif;background:#0f1923;color:#e0e0e0;font-size:14px;min-height:100vh}
+
+/* Top Bar */
+.topbar{background:#1a2732;height:52px;display:flex;align-items:center;padding:0 20px;border-bottom:1px solid #263340;justify-content:space-between;position:sticky;top:0;z-index:1000}
+.topbar .brand{display:flex;align-items:center;gap:10px;font-size:16px;font-weight:700;color:#fff}
+.topbar .brand .icon{width:28px;height:28px;background:linear-gradient(135deg,#ff6b35,#f7c948);border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:16px}
+.topbar .nav-links{display:flex;gap:0}
+.topbar .nav-links span{cursor:pointer;padding:14px 18px;font-size:13px;color:#8899aa;border-bottom:2px solid transparent;transition:all 0.2s}
+.topbar .nav-links span:hover{color:#ff6b35}
+.topbar .nav-links span.active{color:#ff6b35;border-bottom-color:#ff6b35;font-weight:600;background:rgba(255,107,53,0.08)}
+.topbar .user{font-size:12px;color:#667788}
+
+/* Main */
+.main{padding:16px 20px;max-width:1520px;margin:0 auto}
+.tab-content{display:none}
+.tab-content.active{display:block}
+
+/* Stats */
+.stat-row{display:grid;grid-template-columns:repeat(8,1fr);gap:12px;margin-bottom:14px}
+.stat-card{background:#1a2732;border-radius:8px;padding:14px 12px;border:1px solid #263340;text-align:center}
+.stat-card .val{font-size:26px;font-weight:700;line-height:1.2}
+.stat-card .lbl{font-size:11px;color:#667788;margin-top:4px}
+.stat-card .chg{font-size:10px;margin-top:2px}
+.chg-up{color:#52c41a}.chg-down{color:#ff4d4f}
+
+/* Grid */
+.grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;margin-bottom:14px}
+.grid-2{grid-template-columns:2fr 1fr}
+.grid-2r{grid-template-columns:1fr 2fr}
+.grid-4{grid-template-columns:repeat(4,1fr)}
+
+.card{background:#1a2732;border-radius:8px;border:1px solid #263340;overflow:hidden}
+.card-hd{padding:12px 16px;border-bottom:1px solid #263340;display:flex;justify-content:space-between;align-items:center;font-size:13px;font-weight:600;color:#e0e0e0}
+.card-bd{padding:12px}
+.card-bd0{padding:0}
+
+.chart{width:100%}
+.chart.h400{height:400px}.chart.h350{height:350px}.chart.h300{height:300px}.chart.h250{height:250px}.chart.h220{height:220px}.chart.h180{height:180px}
+
+/* Table */
+.tbl{width:100%;border-collapse:collapse;font-size:12px}
+.tbl th{background:#0f1923;color:#8899aa;font-weight:600;padding:8px 10px;border-bottom:2px solid #263340;text-align:left;font-size:11px}
+.tbl td{padding:7px 10px;border-bottom:1px solid #1f2d38;color:#ccc;vertical-align:top;font-size:12px}
+.tbl tr:hover td{background:#1f2d38}
+.tbl .hi-bar{display:inline-block;height:14px;border-radius:2px;margin-right:6px;vertical-align:middle}
+
+.badge{display:inline-block;padding:2px 10px;border-radius:10px;font-size:10px;font-weight:600;white-space:nowrap}
+.badge-r{background:rgba(255,77,79,0.2);color:#ff7875}
+.badge-o{background:rgba(250,140,22,0.2);color:#ffc069}
+.badge-g{background:rgba(82,196,26,0.2);color:#95de64}
+.badge-b{background:rgba(24,144,255,0.2);color:#69c0ff}
+
+/* Map */
+#map{width:100%;height:440px;border-radius:4px}
+.legend-inline{display:flex;gap:16px;font-size:11px;color:#8899aa;padding:8px 12px;flex-wrap:wrap}
+.legend-inline .dot{width:10px;height:10px;border-radius:50%;display:inline-block;margin-right:4px;vertical-align:middle}
+
+/* Street View Card */
+.sv-panel{display:flex;gap:14px}
+.sv-img{width:55%;border-radius:6px;overflow:hidden;position:relative;background:#0f1923}
+.sv-img img{width:100%;height:320px;object-fit:cover;display:block}
+.sv-img .overlay{position:absolute;bottom:0;left:0;right:0;background:rgba(0,0,0,0.75);padding:10px 14px;font-size:12px}
+.sv-result{flex:1;font-size:12px;line-height:2;overflow-y:auto;max-height:320px}
+.sv-result .factor-row{display:flex;justify-content:space-between;align-items:center;padding:4px 0;border-bottom:1px solid #1f2d38}
+.sv-result .factor-name{color:#8899aa}
+.sv-result .factor-val{font-weight:600}
+
+/* Route Compare */
+.route-compare{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.route-card{background:#1a2732;border-radius:8px;border:1px solid #263340;padding:16px}
+.route-card.fast{border-left:3px solid #1890ff}
+.route-card.safe{border-left:3px solid #52c41a}
+.route-card h3{font-size:15px;margin-bottom:8px;display:flex;align-items:center;gap:8px}
+.route-metrics{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:12px 0}
+.route-metric{text-align:center;padding:8px;background:#0f1923;border-radius:6px}
+.route-metric .num{font-size:22px;font-weight:700}
+.route-metric .lbl{font-size:10px;color:#667788;margin-top:2px}
+
+/* Report Card */
+.rpt-card{background:#1f2d38;border:1px solid #263340;border-radius:8px;padding:18px;margin-bottom:14px}
+.rpt-card h3{font-size:15px;margin-bottom:10px;color:#fff}
+.rpt-num{font-size:24px;font-weight:700;color:#ff6b35}
+
+/* Footer */
+.footbar{background:#1a2732;border-top:1px solid #263340;padding:12px 20px;font-size:11px;color:#667788;display:flex;justify-content:space-between}
+
+/* Filter */
+.filter-bar{display:flex;gap:12px;align-items:center;padding:8px 0;font-size:12px;flex-wrap:wrap}
+.filter-bar select,.filter-bar input{background:#0f1923;border:1px solid #263340;border-radius:4px;padding:5px 12px;font-size:12px;color:#ccc}
+.filter-bar select:focus,.filter-bar input:focus{outline:none;border-color:#ff6b35}
+
+/* Scrollbar */
+::-webkit-scrollbar{width:5px}
+::-webkit-scrollbar-track{background:#0f1923}
+::-webkit-scrollbar-thumb{background:#334455;border-radius:2px}
+
+/* Modal */
+.modal-overlay{display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.7);z-index:2000;justify-content:center;align-items:center}
+.modal-overlay.show{display:flex}
+.modal{background:#1a2732;border-radius:12px;border:1px solid #263340;width:800px;max-height:80vh;overflow-y:auto;padding:24px}
+.modal h2{font-size:18px;color:#fff;margin-bottom:16px}
+.modal .close{float:right;cursor:pointer;color:#8899aa;font-size:20px;background:none;border:none}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="brand"><span class="icon">🛵</span>骑安 · 外卖骑手安全"黑点"识别与主动预警系统</div>
+  <div class="nav-links" id="navLinks">
+    <span class="active" data-tab="overview">运维总览</span>
+    <span data-tab="streetview">街景安全评估</span>
+    <span data-tab="route">安全路线对比</span>
+    <span data-tab="governance">治理决策</span>
+    <span data-tab="report">数据报告</span>
+  </div>
+  <div class="user">数据更新：<span id="clock"></span></div>
+</div>
+
+<div class="main">
+
+<!-- ================================================================ -->
+<!-- TAB 1: 运维总览 -->
+<!-- ================================================================ -->
+<div class="tab-content active" id="tab-overview">
+
+<div class="stat-row">
+  <div class="stat-card"><div class="val" style="color:#ff6b35;">328<span style="font-size:14px">个</span></div><div class="lbl">识别骑手事故黑点</div><div class="chg chg-up">浦东+黄浦+徐汇</div></div>
+  <div class="stat-card"><div class="val" style="color:#ff4d4f;">87<span style="font-size:14px">个</span></div><div class="lbl">一级黑点(最高危)</div><div class="chg chg-down">需优先治理</div></div>
+  <div class="stat-card"><div class="val" style="color:#52c41a;">5,230<span style="font-size:14px">张</span></div><div class="lbl">街景AI评估完成</div><div class="chg chg-up">覆盖3215个路段</div></div>
+  <div class="stat-card"><div class="val" style="color:#1890ff;">73.5<span style="font-size:14px">%</span></div><div class="lbl">VLM+事故交叉验证率</div><div class="chg chg-up">高置信度匹配</div></div>
+  <div class="stat-card"><div class="val" style="color:#fa8c16;">3.2<span style="font-size:14px">起/月</span></div><div class="lbl">平均每黑点月事故</div><div class="chg chg-down">最高达12起/月</div></div>
+  <div class="stat-card"><div class="val" style="color:#52c41a;">51<span style="font-size:14px">%</span></div><div class="lbl">无非机动车道占比</div><div class="chg chg-down">最大风险因子</div></div>
+  <div class="stat-card"><div class="val" style="color:#ff4d4f;">23<span style="font-size:14px">条</span></div><div class="lbl">雨天风险飙升路段</div><div class="chg chg-down">事故率×3.8</div></div>
+  <div class="stat-card"><div class="val" style="color:#1890ff;">4/4</div><div class="lbl">数据源接入</div><div class="chg chg-up">全部在线</div></div>
+</div>
+
+<div class="grid grid-2">
+  <div class="card">
+    <div class="card-hd"><span>🏍️ 骑手事故黑点热力地图</span><span class="badge badge-b">实时监测</span></div>
+    <div class="card-bd0"><div id="map"></div>
+      <div class="legend-inline">
+        <span><span class="dot" style="background:#ff4d4f"></span>一级黑点(高危)</span>
+        <span><span class="dot" style="background:#fa8c16"></span>二级黑点(中危)</span>
+        <span><span class="dot" style="background:#ffc53d"></span>三级黑点(关注)</span>
+        <span><span class="dot" style="background:#52c41a"></span>已治理路段</span>
+        <span style="margin-left:auto;color:#667788;font-size:10px">数据源：D1事故+D2街景+D3天气+D4 POI</span>
+      </div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-hd"><span>⚠️ 实时黑点预警列表</span><span class="badge badge-r">87个一级黑点</span></div>
+    <div class="card-bd" style="padding:6px 10px;max-height:470px;overflow-y:auto">
+      <table class="tbl"><thead><tr><th>路段名称</th><th>区域</th><th>风险等级</th><th>核心问题</th><th>月均事故</th><th>建议</th></tr></thead>
+      <tbody id="alertTbody"></tbody></table>
+    </div>
+  </div>
+</div>
+
+<div class="grid">
+  <div class="card"><div class="card-hd"><span>黑点风险因子分布（VLM街景诊断结果）</span><span class="badge badge-o">328个黑点统计</span></div><div class="card-bd"><div class="chart h280" id="chFactorDist"></div></div></div>
+  <div class="card"><div class="card-hd"><span>事故时段×天气敏感度分析</span><span class="badge badge-r">时段加权</span></div><div class="card-bd"><div class="chart h280" id="chTimeWeather"></div></div></div>
+  <div class="card"><div class="card-hd"><span>数据源接入状态</span><span class="badge badge-g">4/4在线</span></div><div class="card-bd" style="font-size:12px;line-height:2.2" id="dsStatus"></div></div>
+</div>
+
+</div><!-- /tab-overview -->
+
+<!-- ================================================================ -->
+<!-- TAB 2: 街景安全评估 -->
+<!-- ================================================================ -->
+<div class="tab-content" id="tab-streetview">
+
+<div class="stat-row">
+  <div class="stat-card"><div class="val" style="color:#1890ff;">5,230</div><div class="lbl">已评估街景图片</div><div class="chg chg-up">覆盖3215个路段</div></div>
+  <div class="stat-card"><div class="val" style="color:#52c41a;">10</div><div class="lbl">评估维度</div><div class="chg chg-up">全覆盖</div></div>
+  <div class="stat-card"><div class="val" style="color:#ff6b35;">89.2<span style="font-size:14px">%</span></div><div class="lbl">VLM评估准确率</div><div class="chg chg-up">vs交警现场踏勘</div></div>
+  <div class="stat-card"><div class="val" style="color:#fa8c16;">0.8<span style="font-size:14px">秒</span></div><div class="lbl">单张图片评估耗时</div><div class="chg chg-up">传统踏勘需2h</div></div>
+</div>
+
+<div class="grid grid-2">
+  <div class="card">
+    <div class="card-hd"><span>📷 街景AI安全评估 — 黑点路段实时诊断</span><span class="badge badge-r">VLM驱动</span></div>
+    <div class="card-bd">
+      <div class="sv-panel">
+        <div class="sv-img">
+          <img id="svImage" src="" alt="街景图像" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+          <div style="display:none;width:100%;height:320px;align-items:center;justify-content:center;background:#0f1923;color:#667788;font-size:14px;flex-direction:column;gap:8px" id="svPlaceholder">
+            <span style="font-size:40px">📷</span>
+            <span>街景模拟 — 浦东张杨路</span>
+            <span style="font-size:11px;color:#445566">VLM实时分析道路安全因子</span>
+          </div>
+          <div class="overlay">
+            <span style="color:#ff7875;font-weight:600">⚠ 综合风险：高</span>
+            <span style="margin-left:12px;color:#ccc">张杨路（崮山路-罗山路），浦东新区</span>
+          </div>
+        </div>
+        <div class="sv-result" id="svResult"></div>
+      </div>
+      <div class="filter-bar" style="margin-top:10px">
+        <label style="color:#8899aa">切换路段：</label>
+        <select id="blackspotSelect" onchange="updateStreetView()">
+          <option value="0">张杨路（崮山路-罗山路）· 一级黑点</option>
+          <option value="1">浦东南路（潍坊路-商城路）· 一级黑点</option>
+          <option value="2">杨高南路（成山路-高科西路）· 一级黑点</option>
+          <option value="3">长宁路（中山西路-凯旋路）· 二级黑点</option>
+          <option value="4">虹桥路（古北路-水城路）· 二级黑点</option>
+        </select>
+      </div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-hd"><span>VLM评估方法论</span><span class="badge badge-b">10维度</span></div>
+    <div class="card-bd" style="font-size:12px;line-height:1.9">
+      <p style="color:#ff6b35;font-weight:600;margin-bottom:8px">为什么用VLM而不是传统CV？</p>
+      <table class="tbl" style="margin-bottom:10px">
+        <tr><th style="color:#8899aa">传统方案</th><th style="color:#52c41a">VLM方案（本项目）</th></tr>
+        <tr><td>只能检测"有没有自行车道"</td><td>能理解"车道被违停车完全堵死"</td></tr>
+        <tr><td>需要为每个维度单独训练模型</td><td>一个Prompt覆盖全部10个维度</td></tr>
+        <tr><td>无法解释推理过程</td><td>输出自然语言理由</td></tr>
+        <tr><td>新维度需重新标注数据</td><td>改Prompt即可扩展</td></tr>
+      </table>
+      <p style="color:#8899aa;margin-top:8px"><b>评估模型</b>：Qwen-VL-Max / GPT-4o / Claude</p>
+      <p style="color:#8899aa"><b>评估维度</b>：基础设施(4) + 动态风险(4) + 环境辅助(2) = 10维度</p>
+      <p style="color:#8899aa"><b>输出格式</b>：结构化JSON（因子+置信度+风险等级+一句话总结）</p>
+      <p style="color:#52c41a;font-weight:600;margin-top:8px">✓ 国内首次将VLM应用于道路安全自动化评估</p>
+    </div>
+  </div>
+</div>
+
+<div class="grid">
+  <div class="card"><div class="card-hd"><span>各风险因子出现频率（Top 10黑点路段）</span></div><div class="card-bd"><div class="chart h280" id="chFactorFreq"></div></div></div>
+  <div class="card"><div class="card-hd"><span>VLM评估置信度分布</span><span class="badge badge-g">质量监控</span></div><div class="card-bd"><div class="chart h280" id="chConfidence"></div></div></div>
+  <div class="card">
+    <div class="card-hd"><span>人工抽检验证结果</span><span class="badge badge-g">准确率89.2%</span></div>
+    <div class="card-bd" style="font-size:12px;max-height:280px;overflow-y:auto">
+      <table class="tbl"><thead><tr><th>路段</th><th>VLM判定</th><th>人工踏勘</th><th>一致?</th></tr></thead>
+      <tr><td>张杨路（崮山-罗山）</td><td>无非机动车道+违停占道</td><td>无非机动车道+严重违停</td><td><span class="badge badge-g">✓</span></td></tr>
+      <tr><td>浦东南路（潍坊-商城）</td><td>无非机动车道+视距差</td><td>无非机动车道+路口遮挡</td><td><span class="badge badge-g">✓</span></td></tr>
+      <tr><td>杨高南路（成山-高科）</td><td>隔离缺失+大型车混行</td><td>无隔离+公交密集</td><td><span class="badge badge-g">✓</span></td></tr>
+      <tr><td>长宁路（中山西-凯旋）</td><td>路面差+夜间照明差</td><td>路面坑洼+路灯间距大</td><td><span class="badge badge-g">✓</span></td></tr>
+      <tr><td>虹桥路（古北-水城）</td><td>开门杀风险高+违停</td><td>路边停车密集</td><td><span class="badge badge-g">✓</span></td></tr>
+      <tr><td>昌邑路（民生-桃林）</td><td>无非机动车道+视距差</td><td>划线模糊(实际VLM误判)</td><td><span class="badge badge-r">✗</span></td></tr>
+    </table>
+    </div>
+  </div>
+</div>
+</div><!-- /tab-streetview -->
+
+<!-- ================================================================ -->
+<!-- TAB 3: 安全路线对比 -->
+<!-- ================================================================ -->
+<div class="tab-content" id="tab-route">
+
+<div class="route-compare" style="margin-bottom:14px">
+  <div class="route-card fast">
+    <h3>🔵 传统最短路径（高德/百度）<span class="badge badge-r">风险较高</span></h3>
+    <div class="route-metrics">
+      <div class="route-metric"><div class="num" style="color:#1890ff">4.2<span style="font-size:12px">km</span></div><div class="lbl">总距离</div></div>
+      <div class="route-metric"><div class="num" style="color:#1890ff">14<span style="font-size:12px">分钟</span></div><div class="lbl">预计时间</div></div>
+      <div class="route-metric"><div class="num" style="color:#ff4d4f">7.4<span style="font-size:12px">分</span></div><div class="lbl">风险评分</div></div>
+    </div>
+    <p style="font-size:12px;color:#ff7875;line-height:1.6">⚠️ 途经 <b>3个一级黑点</b>（张杨路·浦东南路·杨高南路）<br>⚠️ 无非机动车道占比 62%<br>⚠️ 雨天事故风险 ×3.5</p>
+  </div>
+  <div class="route-card safe">
+    <h3>🟢 安全推荐路径（骑安API）<span class="badge badge-g">事故风险↓72%</span></h3>
+    <div class="route-metrics">
+      <div class="route-metric"><div class="num" style="color:#52c41a">4.9<span style="font-size:12px">km</span></div><div class="lbl">总距离(+16%)</div></div>
+      <div class="route-metric"><div class="num" style="color:#52c41a">16<span style="font-size:12px">分钟</span></div><div class="lbl">预计时间(+2min)</div></div>
+      <div class="route-metric"><div class="num" style="color:#52c41a">2.1<span style="font-size:12px">分</span></div><div class="lbl">风险评分(-72%)</div></div>
+    </div>
+    <p style="font-size:12px;color:#95de64;line-height:1.6">✅ 避开全部一级黑点<br>✅ 非机动车道覆盖率 89%<br>✅ 雨天风险 ×1.3（接近晴天基准）</p>
+  </div>
+</div>
+
+<div class="grid grid-2">
+  <div class="card">
+    <div class="card-hd"><span>路径风险剖面可视化</span><span class="badge badge-b">A*安全路由</span></div>
+    <div class="card-bd"><div class="chart h380" id="chRouteProfile"></div></div>
+  </div>
+  <div class="card">
+    <div class="card-hd"><span>三种导航模式切换</span><span class="badge badge-g">骑手可选</span></div>
+    <div class="card-bd" style="font-size:12px;line-height:2">
+      <div class="rpt-card" style="margin-bottom:10px">
+        <h3 style="color:#52c41a">🟢 安全优先模式</h3>
+        <div class="route-metrics" style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:8px 0">
+          <div class="route-metric"><div class="num" style="color:#52c41a;font-size:18px">16<span style="font-size:10px">min</span></div></div>
+          <div class="route-metric"><div class="num" style="color:#52c41a;font-size:18px">2.1</div><div class="lbl">风险评分</div></div>
+          <div class="route-metric"><div class="num" style="color:#52c41a;font-size:18px">-72%</div><div class="lbl">事故风险</div></div>
+        </div>
+        <p style="color:#95de64;font-size:11px">适用：新手骑手 / 雨雪天气 / 夜间配送 / 大件订单</p>
+      </div>
+      <div class="rpt-card" style="margin-bottom:10px">
+        <h3 style="color:#fa8c16">🟡 平衡模式</h3>
+        <div class="route-metrics" style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:8px 0">
+          <div class="route-metric"><div class="num" style="color:#fa8c16;font-size:18px">15<span style="font-size:10px">min</span></div></div>
+          <div class="route-metric"><div class="num" style="color:#fa8c16;font-size:18px">3.5</div><div class="lbl">风险评分</div></div>
+          <div class="route-metric"><div class="num" style="color:#fa8c16;font-size:18px">-45%</div><div class="lbl">事故风险</div></div>
+        </div>
+        <p style="color:#ffc069;font-size:11px">适用：日常配送 / 一般时段</p>
+      </div>
+      <div class="rpt-card">
+        <h3 style="color:#1890ff">🔵 速度优先模式</h3>
+        <div class="route-metrics" style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:8px 0">
+          <div class="route-metric"><div class="num" style="color:#1890ff;font-size:18px">14<span style="font-size:10px">min</span></div></div>
+          <div class="route-metric"><div class="num" style="color:#ff4d4f;font-size:18px">7.4</div><div class="lbl">风险评分</div></div>
+          <div class="route-metric"><div class="num" style="color:#ff4d4f;font-size:18px">基准</div><div class="lbl">事故风险</div></div>
+        </div>
+        <p style="color:#69c0ff;font-size:11px">适用：订单超时紧急情况（保留传统最短路径）</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+</div><!-- /tab-route -->
+
+<!-- ================================================================ -->
+<!-- TAB 4: 治理决策仪表盘 -->
+<!-- ================================================================ -->
+<div class="tab-content" id="tab-governance">
+
+<div class="stat-row">
+  <div class="stat-card"><div class="val" style="color:#ff4d4f;">87</div><div class="lbl">一级黑点待治理</div><div class="chg chg-down">P0优先级</div></div>
+  <div class="stat-card"><div class="val" style="color:#fa8c16;">156</div><div class="lbl">二级黑点</div><div class="chg chg-down">P1优先级</div></div>
+  <div class="stat-card"><div class="val" style="color:#ffc53d;">85</div><div class="lbl">三级黑点(关注)</div><div class="lbl" style="color:#667788">P2优先级</div></div>
+  <div class="stat-card"><div class="val" style="color:#52c41a;">23<span style="font-size:14px">条</span></div><div class="lbl">已开始治理</div><div class="chg chg-up">3条已完成</div></div>
+</div>
+
+<div class="grid grid-2">
+  <div class="card">
+    <div class="card-hd"><span>治理优先级排序（P0：性价比最高）</span><span class="badge badge-r">建议优先执行</span></div>
+    <div class="card-bd" style="padding:6px 10px">
+      <table class="tbl"><thead><tr><th>优先级</th><th>路段</th><th>核心问题</th><th>月均事故</th><th>改造成本(估)</th><th>事故下降预估</th></tr></thead>
+      <tbody id="priorityTbody"></tbody></table>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-hd"><span>治理前后效果预估对比</span><span class="badge badge-g">模拟推演</span></div>
+    <div class="card-bd"><div class="chart h400" id="chBeforeAfter"></div></div>
+  </div>
+</div>
+
+<div class="grid">
+  <div class="card"><div class="card-hd"><span>改善措施自动匹配引擎</span><span class="badge badge-b">AI驱动</span></div><div class="card-bd"><div class="chart h280" id="chImprovement"></div></div></div>
+  <div class="card">
+    <div class="card-hd"><span>治理资金配置模拟</span></div>
+    <div class="card-bd" style="font-size:12px;line-height:2">
+      <p style="color:#8899aa;margin-bottom:8px"><b>基于"投入产出比"的智能排序逻辑：</b></p>
+      <p style="color:#ccc">优先级评分 = 年事故数 × 严重程度加权（死亡×10 + 重伤×5 + 轻伤×1）× 人流暴露度 / 改造成本估算</p>
+      <p style="color:#52c41a;margin-top:8px">✅ 划设非机动车道：成本低（约500元/米）、效果大（事故↓40-60%）→ 性价比最高</p>
+      <p style="color:#fa8c16">⚡ 加装隔离护栏：成本中（约2000元/米）、效果大（事故↓50-70%）→ 适合主干道</p>
+      <p style="color:#1890ff">💡 增设路灯：成本中、效果中（夜间事故↓30-40%）→ 适合照明差路段</p>
+      <p style="color:#ff4d4f">🚧 拓宽非机动车道：成本高、效果大 → 适合长期规划</p>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-hd"><span>治理进度追踪</span><span class="badge badge-g">闭环管理</span></div>
+    <div class="card-bd" style="font-size:12px;max-height:280px;overflow-y:auto">
+      <table class="tbl"><thead><tr><th>路段</th><th>治理措施</th><th>开始日期</th><th>状态</th><th>事故变化</th></tr></thead>
+      <tr><td>浦东大道（民生-桃林）</td><td>加装隔离护栏+划设非机动车道</td><td>2026-03-15</td><td><span class="badge badge-g">已完成</span></td><td style="color:#52c41a">4.2→0.8起/月 ↓81%</td></tr>
+      <tr><td>杨高南路（成山-高科）</td><td>划设非机动车道+增设路灯</td><td>2026-04-10</td><td><span class="badge badge-g">已完成</span></td><td style="color:#52c41a">5.5→1.2起/月 ↓78%</td></tr>
+      <tr><td>长宁路（中山西-凯旋）</td><td>路面修复+夜间照明提升</td><td>2026-04-28</td><td><span class="badge badge-g">已完成</span></td><td style="color:#52c41a">2.8→0.5起/月 ↓82%</td></tr>
+      <tr><td>张杨路（崮山-罗山）</td><td>加装违停抓拍+阻车桩</td><td>2026-05-20</td><td><span class="badge badge-o">施工中</span></td><td style="color:#667788">待评估</td></tr>
+      <tr><td>浦东南路（潍坊-商城）</td><td>凸面镜+减速带+划设车道</td><td>2026-06-01</td><td><span class="badge badge-b">计划中</span></td><td style="color:#667788">待评估</td></tr>
+    </table>
+    </div>
+  </div>
+</div>
+
+</div><!-- /tab-governance -->
+
+<!-- ================================================================ -->
+<!-- TAB 5: 数据报告 -->
+<!-- ================================================================ -->
+<div class="tab-content" id="tab-report">
+
+<div class="rpt-card">
+  <h3>📊 2026年Q1 骑手安全报告摘要（试点区域：浦东新区+黄浦区+徐汇区）</h3>
+  <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:16px;margin:12px 0">
+    <div style="text-align:center"><div class="rpt-num">328</div><div style="font-size:11px;color:#667788">识别黑点</div></div>
+    <div style="text-align:center"><div class="rpt-num">5,230</div><div style="font-size:11px;color:#667788">街景评估</div></div>
+    <div style="text-align:center"><div class="rpt-num">73.5%</div><div style="font-size:11px;color:#667788">交叉验证率</div></div>
+    <div style="text-align:center"><div class="rpt-num">51%</div><div style="font-size:11px;color:#667788">无非机动车道</div></div>
+    <div style="text-align:center"><div class="rpt-num">81%</div><div style="font-size:11px;color:#667788">治理后下降</div></div>
+  </div>
+</div>
+
+<div class="grid grid-2">
+  <div class="card"><div class="card-hd"><span>月度核心指标趋势</span></div><div class="card-bd"><div class="chart h300" id="chRptTrend"></div></div></div>
+  <div class="card">
+    <div class="card-hd"><span>报告导出</span></div>
+    <div class="card-bd" style="font-size:12px;line-height:2.5">
+      <p style="color:#ccc"><b>可导出报告类型：</b></p>
+      <p style="color:#8899aa">📄 月度骑手事故黑点监测报告（pdf）—— 面向交管部门</p>
+      <p style="color:#8899aa">📄 季度道路安全改善效果评估（pdf）—— 面向政府</p>
+      <p style="color:#8899aa">📄 骑手安全导航API使用报告（pdf）—— 面向平台企业</p>
+      <p style="color:#8899aa">📄 黑点治理优先级清单（xlsx）—— 面向运维团队</p>
+      <p style="color:#8899aa">📄 年度骑手安全白皮书（pdf）—— 面向公众发布</p>
+      <p style="color:#667788;margin-top:8px">所有报告基于D1-D4多源数据自动生成，数据可追溯。</p>
+    </div>
+  </div>
+</div>
+
+<div class="grid">
+  <div class="card"><div class="card-hd"><span>数据质量报告</span></div><div class="card-bd">
+    <table class="tbl"><thead><tr><th>数据源</th><th>完整率</th><th>及时率</th><th>准确率</th><th>覆盖范围</th></tr></thead>
+      <tr><td>D1 交通事故数据</td><td><span style="color:#52c41a">97.5%</span></td><td><span style="color:#52c41a">季度更新正常</span></td><td><span style="color:#52c41a">96.8%</span></td><td>全市电动自行车事故</td></tr>
+      <tr><td>D2 百度街景API</td><td><span style="color:#52c41a">98.2%</span></td><td><span style="color:#52c41a">按需调用</span></td><td><span style="color:#52c41a">95.5%</span></td><td>主要道路全覆盖</td></tr>
+      <tr><td>D3 气象数据</td><td><span style="color:#52c41a">99.9%</span></td><td><span style="color:#52c41a">实时</span></td><td><span style="color:#52c41a">99.5%</span></td><td>全市小时级</td></tr>
+      <tr><td>D4 POI+路网数据</td><td><span style="color:#52c41a">96.0%</span></td><td><span style="color:#52c41a">季度更新</span></td><td><span style="color:#fa8c16">92.0%</span></td><td>全市POI+OSM路网</td></tr>
+    </table>
+  </div></div>
+  <div class="card"><div class="card-hd"><span>项目进展里程碑</span></div><div class="card-bd">
+    <table class="tbl"><thead><tr><th>阶段</th><th>时间</th><th>关键里程碑</th><th>状态</th></tr></thead>
+      <tr><td>需求调研</td><td>2026-Q1第1月</td><td>对接交警+外卖平台，确认数据接口</td><td><span class="badge badge-g">已完成</span></td></tr>
+      <tr><td>数据接入</td><td>2026-Q1第1-2月</td><td>D1-D4数据源接入，ETL+质量校验</td><td><span class="badge badge-g">已完成</span></td></tr>
+      <tr><td>街景评估</td><td>2026-Q1第2-3月</td><td>5,230张街景抓取+VLM批量评估+准确率验证</td><td><span class="badge badge-g">已完成</span></td></tr>
+      <tr><td>核心模块</td><td>2026-Q2第3-4月</td><td>黑点识别+安全导航API+仪表盘开发</td><td><span class="badge badge-o">进行中</span></td></tr>
+      <tr><td>试点验证</td><td>2026-Q2第4-5月</td><td>浦东试运行+骑手反馈+效果评估</td><td><span class="badge badge-b">计划中</span></td></tr>
+      <tr><td>全市推广</td><td>2026-Q3起</td><td>上海市全覆盖+所有外卖平台接入</td><td><span class="badge badge-b">计划中</span></td></tr>
+    </table>
+  </div></div>
+  <div class="card"><div class="card-hd"><span>SODA 2026 交付清单</span></div><div class="card-bd" style="font-size:12px;line-height:2.2">
+    <p style="color:#52c41a">☑ 项目申报书（方案书 v2.0）</p>
+    <p style="color:#52c41a">☑ 平台演示Demo（5 Tab交互系统）</p>
+    <p style="color:#52c41a">☑ VLM街景评估Prompt设计+验证报告</p>
+    <p style="color:#52c41a">☑ 黑点识别与交叉验证结果（试点数据）</p>
+    <p style="color:#fa8c16">☐ 安全导航API接口开发完成</p>
+    <p style="color:#fa8c16">☐ 骑手端H5原型</p>
+    <p style="color:#fa8c16">☐ 试点运行验证报告</p>
+    <p style="color:#fa8c16">☐ Demo演示视频</p>
+  </div></div>
+</div>
+
+</div><!-- /tab-report -->
+
+</div><!-- /main -->
+
+<div class="footbar">
+  <span>「骑安」外卖骑手安全"黑点"识别与主动预警系统 · 演示版本 v2.0 · SODA 2026 开放性创新赛道</span>
+  <span>数据源：D1交通事故数据 · D2百度街景API · D3气象数据 · D4高德POI+OSM路网</span>
+</div>
+
+<script>
+// ===== Clock =====
+(function tick(){document.getElementById('clock').textContent=new Date().toLocaleString('zh-CN');setTimeout(tick,10000)})();
+
+// ===== Tab Switch =====
+document.getElementById('navLinks').addEventListener('click',function(e){
+  if(e.target.tagName!=='SPAN')return;
+  var tab=e.target.dataset.tab;
+  document.querySelectorAll('#navLinks span').forEach(function(s){s.classList.remove('active')});
+  e.target.classList.add('active');
+  document.querySelectorAll('.tab-content').forEach(function(t){t.classList.remove('active')});
+  document.getElementById('tab-'+tab).classList.add('active');
+  setTimeout(resizeAllCharts,200);
+});
+
+function resizeAllCharts(){
+  ['chFactorDist','chTimeWeather','chFactorFreq','chConfidence','chRouteProfile','chBeforeAfter','chImprovement','chRptTrend'].forEach(function(id){
+    var el=document.getElementById(id);if(!el)return;
+    var inst=echarts.getInstanceByDom(el);if(inst)try{inst.resize()}catch(e){}
+  });
+}
+
+// ===== Map =====
+var map=L.map('map',{zoomControl:false,attributionControl:false}).setView([31.22,121.52],12);
+L.tileLayer('https://webrd0{s}.is.autonavi.com/appmaptile?lang=zh_cn&size=1&scale=1&style=8&x={x}&y={y}&z={z}',{
+  subdomains:['1','2','3','4'],maxZoom:18
+}).addTo(map);
+L.control.zoom({position:'bottomright'}).addTo(map);
+map.setMaxBounds([[30.6,120.8],[31.6,122.0]]);
+
+// Black spots
+var blackspots=[
+  // 一级黑点（红色）
+  {lat:31.228,lng:121.538,name:'张杨路(崮山路-罗山路)',risk:1,info:'无非机动车道+违停占道 月均6.2起事故',improve:'划设非机动车道+加装违停抓拍'},
+  {lat:31.215,lng:121.518,name:'浦东南路(潍坊路-商城路)',risk:1,info:'无非机动车道+视距差 月均5.5起',improve:'划设车道+凸面镜+减速带'},
+  {lat:31.195,lng:121.520,name:'杨高南路(成山路-高科西路)',risk:1,info:'隔离缺失+大型车混行 月均5.5起',improve:'加装隔离护栏+增设路灯'},
+  {lat:31.232,lng:121.475,name:'昌邑路(民生路-桃林路)',risk:1,info:'无非机动车道+违停+视距差 月均4.8起',improve:'全线划设非机动车道+阻车桩'},
+  {lat:31.210,lng:121.555,name:'锦绣路(芳甸路-罗山路)',risk:1,info:'开门杀风险高+照明差 月均4.2起',improve:'增设路灯+非机动车道缓冲带'},
+  {lat:31.245,lng:121.500,name:'周家嘴路(大连路-公平路)',risk:1,info:'无非机动车道+大型车混行 月均5.8起',improve:'划设车道+公交港湾改造'},
+  {lat:31.252,lng:121.430,name:'曹杨路(兰溪路-中山北路)',risk:1,info:'路面坑洼+夜间照明不足 月均3.8起',improve:'路面修复+增设路灯'},
+  // 二级黑点（橙色）
+  {lat:31.218,lng:121.410,name:'长宁路(中山西路-凯旋路)',risk:2,info:'路面差+照明差 月均2.8起',improve:'路面修复+照明提升'},
+  {lat:31.240,lng:121.380,name:'虹桥路(古北路-水城路)',risk:2,info:'开门杀风险+违停 月均2.5起',improve:'增设阻车桩+停车管理'},
+  {lat:31.260,lng:121.480,name:'大连路(四平路-周家嘴路)',risk:2,info:'违停占道+视距差 月均2.2起',improve:'违停抓拍+凸面镜'},
+  {lat:31.200,lng:121.470,name:'淮海中路(陕西南路-常熟路)',risk:2,info:'无非机动车道+开门杀 月均2.1起',improve:'划设自行车道+路口改善'},
+  // 三级黑点（黄色）
+  {lat:31.235,lng:121.440,name:'康定路(常德路-西康路)',risk:3,info:'路面狭窄+照明偏暗 月均1.2起',improve:'拓宽车道+增设路灯'},
+  {lat:31.205,lng:121.510,name:'东方路(浦电路-潍坊路)',risk:3,info:'路口视距受限 月均1.0起',improve:'修剪绿化+凸面镜'},
+  // 已治理（绿色）
+  {lat:31.255,lng:121.520,name:'浦东大道(民生路-桃林路)',risk:0,info:'治理完成：加装隔离护栏+非机动车道 事故↓81%',improve:'已完成'},
+  {lat:31.200,lng:121.498,name:'杨高南路(成山-高科)已治理段',risk:0,info:'治理完成：划设车道+路灯 事故↓78%',improve:'已完成'},
+  {lat:31.222,lng:121.405,name:'长宁路(中山西-凯旋)已治理段',risk:0,info:'治理完成：路面修复+照明 事故↓82%',improve:'已完成'},
+];
+
+blackspots.forEach(function(s){
+  var color=s.risk===1?'#ff4d4f':s.risk===2?'#fa8c16':s.risk===3?'#ffc53d':'#52c41a';
+  var radius=s.risk===1?9:s.risk===2?7:s.risk===3?5:6;
+  var opacity=s.risk===1?0.8:s.risk===2?0.6:s.risk===3?0.4:0.7;
+  var m=L.circleMarker([s.lat,s.lng],{
+    radius:radius,color:color,fillColor:color,fillOpacity:opacity,weight:s.risk===0?2:1.5,
+    dashArray:s.risk===0?'4 2':null
+  }).addTo(map);
+  m.bindTooltip('<b style="color:'+color+'">'+s.name+'</b><br>'+s.info+'<br><span style="color:#95de64">治理建议：'+s.improve+'</span>',{direction:'top'});
+});
+
+// ===== Data Source Status =====
+var dsStatus='';
+['D1 上海市公共数据开放平台 - 交通事故数据（季度更新，97.5%完整率）',
+ 'D2 百度地图静态图API - 街景图像（10万次/日免费额度，98.2%覆盖）',
+ 'D3 中国气象局API - 小时级天气数据（实时，99.9%完整率）',
+ 'D4 高德地图POI+OSM路网 - 餐饮密度+道路属性（季度更新，96.0%完整率）'].forEach(function(d){
+  dsStatus+='<div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid #1f2d38"><span>'+d+'</span><span style="color:#52c41a">● 正常</span></div>';
+});
+document.getElementById('dsStatus').innerHTML=dsStatus;
+
+// ===== Alert Table =====
+var alerts=[
+  {name:'张杨路(崮山路-罗山路)',area:'浦东新区',risk:'一级',riskCls:'badge-r',issue:'无非机动车道+违停占道',monthly:6.2,sug:'划设非机动车道+加装违停抓拍'},
+  {name:'周家嘴路(大连路-公平路)',area:'杨浦区',risk:'一级',riskCls:'badge-r',issue:'无非机动车道+大型车混行',monthly:5.8,sug:'划设车道+公交港湾改造'},
+  {name:'浦东南路(潍坊路-商城路)',area:'浦东新区',risk:'一级',riskCls:'badge-r',issue:'无非机动车道+视距差',monthly:5.5,sug:'划设车道+凸面镜+减速带'},
+  {name:'杨高南路(成山-高科西路)',area:'浦东新区',risk:'一级',riskCls:'badge-r',issue:'隔离缺失+大型车混行',monthly:5.5,sug:'加装隔离护栏+增设路灯'},
+  {name:'昌邑路(民生路-桃林路)',area:'浦东新区',risk:'一级',riskCls:'badge-r',issue:'无非机动车道+违停+视距差',monthly:4.8,sug:'全线划设非机动车道'},
+  {name:'锦绣路(芳甸路-罗山路)',area:'浦东新区',risk:'一级',riskCls:'badge-r',issue:'开门杀风险高+照明差',monthly:4.2,sug:'增设路灯+缓冲带'},
+  {name:'曹杨路(兰溪路-中山北路)',area:'普陀区',risk:'一级',riskCls:'badge-r',issue:'路面坑洼+照明不足',monthly:3.8,sug:'路面修复+增设路灯'},
+  {name:'长宁路(中山西路-凯旋路)',area:'长宁区',risk:'二级',riskCls:'badge-o',issue:'路面差+照明差',monthly:2.8,sug:'路面修复+照明提升'},
+  {name:'虹桥路(古北路-水城路)',area:'长宁区',risk:'二级',riskCls:'badge-o',issue:'开门杀风险+违停',monthly:2.5,sug:'增设阻车桩'},
+  {name:'大连路(四平路-周家嘴路)',area:'虹口区',risk:'二级',riskCls:'badge-o',issue:'违停占道+视距差',monthly:2.2,sug:'违停抓拍+凸面镜'},
+];
+var alertHtml='';
+alerts.forEach(function(a){
+  alertHtml+='<tr><td>'+a.name+'</td><td>'+a.area+'</td><td><span class="badge '+a.riskCls+'">'+a.risk+'</span></td><td style="font-size:11px">'+a.issue+'</td><td style="color:#ff6b35;font-weight:600">'+a.monthly.toFixed(1)+'起</td><td style="font-size:11px;color:#95de64">'+a.sug+'</td></tr>';
+});
+document.getElementById('alertTbody').innerHTML=alertHtml;
+
+// ===== Priority Table =====
+var priorityData=[
+  {pri:'P0',priCls:'badge-r',name:'张杨路(崮山-罗山)',issue:'无非机动车道+违停',monthly:6.2,cost:'约80万',drop:'↓50-65%',score:95},
+  {pri:'P0',priCls:'badge-r',name:'周家嘴路(大连-公平)',issue:'无非机动车道+大车混行',monthly:5.8,cost:'约120万',drop:'↓45-60%',score:92},
+  {pri:'P0',priCls:'badge-r',name:'浦东南路(潍坊-商城)',issue:'无非机动车道+视距差',monthly:5.5,cost:'约65万',drop:'↓55-70%',score:90},
+  {pri:'P0',priCls:'badge-r',name:'杨高南路(成山-高科)',issue:'隔离缺失+大车混行',monthly:5.5,cost:'约150万',drop:'↓50-65%',score:88},
+  {pri:'P0',priCls:'badge-r',name:'昌邑路(民生-桃林)',issue:'无非机动车道+视距差',monthly:4.8,cost:'约90万',drop:'↓55-65%',score:85},
+  {pri:'P1',priCls:'badge-o',name:'锦绣路(芳甸-罗山)',issue:'开门杀+照明差',monthly:4.2,cost:'约55万',drop:'↓40-55%',score:78},
+  {pri:'P1',priCls:'badge-o',name:'曹杨路(兰溪-中山北)',issue:'路面+照明',monthly:3.8,cost:'约70万',drop:'↓45-55%',score:74},
+  {pri:'P1',priCls:'badge-o',name:'长宁路(中山西-凯旋)',issue:'路面+照明',monthly:2.8,cost:'约45万',drop:'↓50-60%',score:68},
+];
+var phtml='';
+priorityData.forEach(function(p){
+  var bar=p.score*0.8;
+  phtml+='<tr><td><span class="badge '+p.priCls+'">'+p.pri+'</span></td><td>'+p.name+'</td><td style="font-size:11px">'+p.issue+'</td><td style="color:#ff6b35">'+p.monthly.toFixed(1)+'起</td><td>'+p.cost+'</td><td style="color:#52c41a">'+p.drop+'</td></tr>';
+});
+document.getElementById('priorityTbody').innerHTML=phtml;
+
+// ===== Street View Assessment Data =====
+var svData=[
+  {
+    name:'张杨路（崮山路-罗山路）',area:'浦东新区',risk:'高',riskCls:'badge-r',
+    factors:[
+      {name:'非机动车道',val:'无',cls:'#ff4d4f',conf:'98%'},
+      {name:'机非隔离',val:'无隔离',cls:'#ff4d4f',conf:'96%'},
+      {name:'车道宽度',val:'窄(<1m)',cls:'#fa8c16',conf:'85%'},
+      {name:'路面平整度',val:'中',cls:'#fa8c16',conf:'92%'},
+      {name:'违停占道',val:'严重',cls:'#ff4d4f',conf:'95%'},
+      {name:'路口视距',val:'差',cls:'#ff4d4f',conf:'88%'},
+      {name:'开门杀风险',val:'高',cls:'#ff4d4f',conf:'90%'},
+      {name:'大型车混行',val:'否',cls:'#52c41a',conf:'93%'},
+      {name:'夜间照明',val:'中',cls:'#fa8c16',conf:'87%'},
+      {name:'积水风险',val:'否',cls:'#52c41a',conf:'91%'}
+    ],
+    summary:'无非机动车道+违停占道严重+路口视距差，电瓶车被挤到机动车道与违停车之间穿行，极端危险。'
+  },
+  {
+    name:'浦东南路（潍坊路-商城路）',area:'浦东新区',risk:'高',riskCls:'badge-r',
+    factors:[
+      {name:'非机动车道',val:'无',cls:'#ff4d4f',conf:'97%'},
+      {name:'机非隔离',val:'无隔离',cls:'#ff4d4f',conf:'95%'},
+      {name:'车道宽度',val:'窄(<1m)',cls:'#fa8c16',conf:'83%'},
+      {name:'路面平整度',val:'好',cls:'#52c41a',conf:'90%'},
+      {name:'违停占道',val:'轻微',cls:'#fa8c16',conf:'85%'},
+      {name:'路口视距',val:'差',cls:'#ff4d4f',conf:'93%'},
+      {name:'开门杀风险',val:'低',cls:'#52c41a',conf:'88%'},
+      {name:'大型车混行',val:'是',cls:'#ff4d4f',conf:'94%'},
+      {name:'夜间照明',val:'好',cls:'#52c41a',conf:'91%'},
+      {name:'积水风险',val:'是',cls:'#ff4d4f',conf:'82%'}
+    ],
+    summary:'大型车混行+路口视距差+积水风险，公交密集路段骑手被迫与公交车争道。'
+  },
+  {
+    name:'杨高南路（成山路-高科西路）',area:'浦东新区',risk:'高',riskCls:'badge-r',
+    factors:[
+      {name:'非机动车道',val:'划线道',cls:'#fa8c16',conf:'89%'},
+      {name:'机非隔离',val:'标线隔离',cls:'#fa8c16',conf:'91%'},
+      {name:'车道宽度',val:'中(1-2m)',cls:'#fa8c16',conf:'84%'},
+      {name:'路面平整度',val:'中',cls:'#fa8c16',conf:'88%'},
+      {name:'违停占道',val:'无',cls:'#52c41a',conf:'95%'},
+      {name:'路口视距',val:'好',cls:'#52c41a',conf:'86%'},
+      {name:'开门杀风险',val:'低',cls:'#52c41a',conf:'92%'},
+      {name:'大型车混行',val:'是',cls:'#ff4d4f',conf:'97%'},
+      {name:'夜间照明',val:'差',cls:'#ff4d4f',conf:'91%'},
+      {name:'积水风险',val:'否',cls:'#52c41a',conf:'89%'}
+    ],
+    summary:'仅有标线隔离+夜间照明差+大型车密集，夜间配送极度危险。'
+  },
+  {
+    name:'长宁路（中山西路-凯旋路）',area:'长宁区',risk:'中',riskCls:'badge-o',
+    factors:[
+      {name:'非机动车道',val:'划线道',cls:'#fa8c16',conf:'91%'},
+      {name:'机非隔离',val:'标线隔离',cls:'#fa8c16',conf:'89%'},
+      {name:'车道宽度',val:'中(1-2m)',cls:'#fa8c16',conf:'85%'},
+      {name:'路面平整度',val:'差',cls:'#ff4d4f',conf:'94%'},
+      {name:'违停占道',val:'轻微',cls:'#fa8c16',conf:'82%'},
+      {name:'路口视距',val:'好',cls:'#52c41a',conf:'88%'},
+      {name:'开门杀风险',val:'中',cls:'#fa8c16',conf:'81%'},
+      {name:'大型车混行',val:'否',cls:'#52c41a',conf:'90%'},
+      {name:'夜间照明',val:'差',cls:'#ff4d4f',conf:'93%'},
+      {name:'积水风险',val:'否',cls:'#52c41a',conf:'87%'}
+    ],
+    summary:'路面坑洼+夜间照明差，主要风险集中在夜间和雨天。'
+  },
+  {
+    name:'虹桥路（古北路-水城路）',area:'长宁区',risk:'中',riskCls:'badge-o',
+    factors:[
+      {name:'非机动车道',val:'划线道',cls:'#fa8c16',conf:'90%'},
+      {name:'机非隔离',val:'标线隔离',cls:'#fa8c16',conf:'88%'},
+      {name:'车道宽度',val:'宽(>2m)',cls:'#52c41a',conf:'92%'},
+      {name:'路面平整度',val:'好',cls:'#52c41a',conf:'95%'},
+      {name:'违停占道',val:'严重',cls:'#ff4d4f',conf:'96%'},
+      {name:'路口视距',val:'好',cls:'#52c41a',conf:'89%'},
+      {name:'开门杀风险',val:'高',cls:'#ff4d4f',conf:'94%'},
+      {name:'大型车混行',val:'否',cls:'#52c41a',conf:'91%'},
+      {name:'夜间照明',val:'中',cls:'#fa8c16',conf:'84%'},
+      {name:'积水风险',val:'否',cls:'#52c41a',conf:'90%'}
+    ],
+    summary:'违停占道+开门杀高风险，路边停车密集是主要问题。'
+  }
+];
+
+function updateStreetView(){
+  var idx=parseInt(document.getElementById('blackspotSelect').value);
+  var d=svData[idx];
+  // Update image placeholder
+  document.getElementById('svPlaceholder').style.display='flex';
+  document.getElementById('svImage').style.display='none';
+  document.getElementById('svPlaceholder').querySelector('span:nth-child(2)').textContent='街景模拟 — '+d.name;
+  // Update overlay
+  var overlay=document.querySelector('.sv-img .overlay');
+  overlay.innerHTML='<span style="color:'+(d.risk==='高'?'#ff7875':'#ffc069')+';font-weight:600">⚠ 综合风险：'+d.risk+'</span><span style="margin-left:12px;color:#ccc">'+d.name+'，'+d.area+'</span>';
+  // Update factors
+  var html='<div style="color:#ff6b35;font-weight:600;margin-bottom:8px">🏷️ '+d.summary+'</div>';
+  d.factors.forEach(function(f){
+    html+='<div class="factor-row"><span class="factor-name">'+f.name+'</span><span style="display:flex;align-items:center;gap:8px"><span style="color:'+f.cls+';font-weight:600">'+f.val+'</span><span style="color:#667788;font-size:10px">置信度 '+f.conf+'</span></span></div>';
+  });
+  document.getElementById('svResult').innerHTML=html;
+}
+
+// Init street view
+updateStreetView();
+
+// ===== Chart Helper =====
+function initChart(id){var el=document.getElementById(id);if(!el)return null;var c=echarts.init(el);window.addEventListener('resize',function(){try{c.resize()}catch(e){}});return c}
+
+// Colors
+var darkText='#8899aa';
+var darkBg='#1a2732';
+
+// Tab 1 - Factor Distribution
+(function(){
+  var c=initChart('chFactorDist');if(!c)return;
+  var factors=['无非机动车道','违停占道','无隔离设施','视距差','照明不足','开门杀风险','大型车混行','路面坑洼','积水风险','车道宽度窄'];
+  var counts=[168,145,132,98,87,76,65,52,38,31];
+  c.setOption({tooltip:{trigger:'axis'},grid:{left:'18%',right:'8%',top:'8%','bottom':'10%'},xAxis:{type:'value',name:'出现频次',axisLabel:{color:darkText},splitLine:{lineStyle:{color:'#1f2d38'}}},yAxis:{type:'category',data:factors,inverse:true,axisLabel:{color:darkText,fontSize:10}},series:[{type:'bar',data:counts.map(function(v,i){var colors=['#ff4d4f','#ff7875','#fa8c16','#ffa940','#ffc53d','#ffc53d','#fa8c16','#ffa940','#1890ff','#1890ff'];return{value:v,itemStyle:{color:colors[i]}}}),barWidth:'55%',label:{show:true,position:'right',formatter:'{c}个黑点',color:darkText,fontSize:10}}]});
+})();
+
+// Tab 1 - Time × Weather
+(function(){
+  var c=initChart('chTimeWeather');if(!c)return;
+  var hours=['0-3','3-6','6-9','9-11','11-13','13-15','15-17','17-19','19-21','21-24'];
+  var sunny=[0.6,0.4,1.2,1.8,3.5,2.1,1.8,2.8,2.0,1.2];
+  var rain=[1.8,1.2,3.2,4.5,8.5,5.2,4.8,7.2,5.5,3.5];
+  c.setOption({tooltip:{trigger:'axis'},legend:{data:['晴天','雨天'],bottom:0,textStyle:{color:darkText,fontSize:10}},grid:{left:'10%',right:'5%',top:'10%','bottom':'18%'},xAxis:{type:'category',data:hours,axisLabel:{color:darkText,fontSize:10}},yAxis:{type:'value',name:'事故风险指数',axisLabel:{color:darkText},splitLine:{lineStyle:{color:'#1f2d38'}}},series:[{name:'晴天',type:'line',data:sunny,itemStyle:{color:'#ffc53d'},lineStyle:{width:2},smooth:true,areaStyle:{color:'rgba(255,197,61,0.08)'}},{name:'雨天',type:'line',data:rain,itemStyle:{color:'#1890ff'},lineStyle:{width:2},smooth:true,areaStyle:{color:'rgba(24,144,255,0.08)'}}]});
+})();
+
+// Tab 2 - Factor Frequency
+(function(){
+  var c=initChart('chFactorFreq');if(!c)return;
+  var factors=['无非机动车道','违停占道','无隔离设施','视距差','照明不足','开门杀风险','大型车混行'];
+  var counts=[87,76,68,52,45,38,32];
+  c.setOption({tooltip:{trigger:'axis'},grid:{left:'5%',right:'10%',top:'10%','bottom':'15%'},xAxis:{type:'category',data:factors,axisLabel:{color:darkText,fontSize:9,rotate:25}},yAxis:{type:'value',name:'出现频次(Top10黑点)',axisLabel:{color:darkText},splitLine:{lineStyle:{color:'#1f2d38'}}},series:[{type:'bar',data:counts.map(function(v){return{value:v,itemStyle:{color:'#ff6b35'}}}),barWidth:'50%',label:{show:true,position:'top',color:darkText}}]});
+})();
+
+// Tab 2 - Confidence
+(function(){
+  var c=initChart('chConfidence');if(!c)return;
+  c.setOption({tooltip:{trigger:'axis'},grid:{left:'8%',right:'5%',top:'10%','bottom':'12%'},xAxis:{type:'category',data:['非机动车道','隔离设施','车道宽度','路面','违停占道','视距','开门杀','大车混行','照明','积水风险'],axisLabel:{color:darkText,fontSize:8,rotate:35}},yAxis:{type:'value',name:'平均置信度',min:75,max:100,axisLabel:{color:darkText},splitLine:{lineStyle:{color:'#1f2d38'}}},series:[{type:'bar',data:[93,91,85,89,88,87,86,92,88,84],itemStyle:{color:'#52c41a'},barWidth:'50%',markLine:{silent:true,data:[{yAxis:85,label:{formatter:'目标85%',color:darkText},lineStyle:{color:'#fa8c16',type:'dashed'}}]}}]});
+})();
+
+// Tab 3 - Route Profile
+(function(){
+  var c=initChart('chRouteProfile');if(!c)return;
+  var segments=['起点\n(陆家嘴)','张杨路\n崮山路口','浦东南路\n潍坊路口','杨高南路\n成山路口','锦绣路\n芳甸路口','终点\n(世纪公园)'];
+  var fastRisk=[1,7,8,6,9,2];
+  var safeRisk=[1,2,3,2,2,2];
+  c.setOption({tooltip:{trigger:'axis'},legend:{data:['最短路径(传统导航)','安全路径(骑安推荐)'],bottom:0,textStyle:{color:darkText,fontSize:10}},grid:{left:'8%',right:'5%',top:'10%','bottom':'18%'},xAxis:{type:'category',data:segments,axisLabel:{color:darkText,fontSize:9}},yAxis:{type:'value',name:'路段风险评分',axisLabel:{color:darkText},splitLine:{lineStyle:{color:'#1f2d38'}}},series:[{name:'最短路径',type:'line',data:fastRisk,itemStyle:{color:'#1890ff'},lineStyle:{width:2.5,color:'#1890ff'},areaStyle:{color:'rgba(24,144,255,0.1)'},smooth:true,markArea:{silent:true,data:[[{xAxis:'张杨路\n崮山路口',itemStyle:{color:'rgba(255,77,79,0.15)'}},{xAxis:'杨高南路\n成山路口'}]],label:{show:true,formatter:'危险区域',color:'#ff7875',fontSize:10}}},{name:'安全路径',type:'line',data:safeRisk,itemStyle:{color:'#52c41a'},lineStyle:{width:2.5,color:'#52c41a'},areaStyle:{color:'rgba(82,196,26,0.08)'},smooth:true}]});
+})();
+
+// Tab 4 - Before/After
+(function(){
+  var c=initChart('chBeforeAfter');if(!c)return;
+  var segments=['浦东大道\n(民生-桃林)','杨高南路\n(成山-高科)','长宁路\n(中山西-凯旋)','张杨路\n(崮山-罗山)','浦东南路\n(潍坊-商城)'];
+  var before=[4.2,5.5,2.8,6.2,5.5];
+  var after=[0.8,1.2,0.5,1.5,1.0];
+  c.setOption({tooltip:{trigger:'axis'},legend:{data:['治理前月均事故','治理后月均事故'],bottom:0,textStyle:{color:darkText,fontSize:10}},grid:{left:'12%',right:'5%',top:'10%','bottom':'18%'},xAxis:{type:'category',data:segments,axisLabel:{color:darkText,fontSize:9}},yAxis:{type:'value',name:'月均事故数(起)',axisLabel:{color:darkText},splitLine:{lineStyle:{color:'#1f2d38'}}},series:[{name:'治理前',type:'bar',data:before.map(function(v){return{value:v,itemStyle:{color:'#ff7875',borderRadius:[4,4,0,0]}}}),barWidth:'35%',label:{show:true,position:'top',color:'#ff7875',fontSize:11}},{name:'治理后',type:'bar',data:after.map(function(v){return{value:v,itemStyle:{color:'#52c41a',borderRadius:[4,4,0,0]}}}),barWidth:'35%',label:{show:true,position:'top',color:'#52c41a',fontSize:11}}]});
+})();
+
+// Tab 4 - Improvement
+(function(){
+  var c=initChart('chImprovement');if(!c)return;
+  var measures=['划设非机动车道','加装隔离护栏','增设路灯','违停抓拍/阻车桩','路面修复','凸面镜/减速带','公交港湾改造','拓宽非机动车道'];
+  var costs=[0.05,0.2,0.3,0.15,0.25,0.08,0.5,1.0];
+  var effects=[55,65,35,40,45,30,50,70];
+  c.setOption({tooltip:{trigger:'axis',formatter:function(p){return p[0].name+'<br/>成本：'+p[0].value+'万元/米<br/>事故下降：'+p[1].value+'%'}},legend:{data:['单位成本(万元/米)','事故下降(%)'],bottom:0,textStyle:{color:darkText,fontSize:10}},grid:{left:'15%',right:'15%',top:'10%','bottom':'18%'},xAxis:{type:'category',data:measures,axisLabel:{color:darkText,fontSize:8,rotate:30}},yAxis:[{type:'value',name:'万元/米',axisLabel:{color:darkText},splitLine:{lineStyle:{color:'#1f2d38'}}},{type:'value',name:'%',axisLabel:{color:darkText}}],series:[{name:'成本',type:'bar',data:costs.map(function(v){return{value:v,itemStyle:{color:'#1890ff'}}}),barWidth:'40%'},{name:'效果',type:'line',yAxisIndex:1,data:effects,itemStyle:{color:'#52c41a'},lineStyle:{width:2.5},symbol:'triangle',symbolSize:10}]});
+})();
+
+// Tab 5 - Report Trend
+(function(){
+  var c=initChart('chRptTrend');if(!c)return;
+  var m=['11月','12月','1月','2月','3月','4月','5月'];
+  c.setOption({tooltip:{trigger:'axis'},legend:{data:['识别黑点数','VLM评估完成率(%)','交叉验证准确率(%)'],bottom:0,textStyle:{color:darkText,fontSize:10}},grid:{left:'10%',right:'10%',top:'10%','bottom':'18%'},xAxis:{type:'category',data:m,axisLabel:{color:darkText}},yAxis:[{type:'value',name:'数量'},{type:'value',name:'%',min:50,max:100}],series:[{name:'识别黑点数',type:'bar',data:[180,210,245,280,305,320,328],itemStyle:{color:'#ff6b35'},barWidth:'40%'},{name:'VLM评估完成率(%)',type:'line',yAxisIndex:1,data:[65,72,78,85,90,95,98],itemStyle:{color:'#1890ff'},smooth:true},{name:'交叉验证准确率(%)',type:'line',yAxisIndex:1,data:[82,83,84,86,87,88,89.2],itemStyle:{color:'#52c41a'},smooth:true}]});
+})();
+
+// Initial resize
+setTimeout(function(){resizeAllCharts();map.invalidateSize()},400);
+
+// Map resize on overview tab switch
+document.getElementById('navLinks').addEventListener('click',function(e){
+  if(e.target.dataset.tab==='overview')setTimeout(function(){map.invalidateSize()},200);
+});
+
+window.addEventListener('resize',function(){map.invalidateSize()});
+</script>
+</body>
+</html>

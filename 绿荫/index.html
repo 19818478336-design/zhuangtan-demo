@@ -1,0 +1,869 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>绿荫 — 城市树冠公平性评估系统 | SODA 2026</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/echarts@5.5.0/dist/echarts.min.js"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;background:#0f1923;color:#c8d6e5;overflow-x:hidden}
+.header{background:linear-gradient(135deg,#0a1628 0%,#0f1923 50%,#0d2b1f 100%);padding:0 28px;height:56px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #1a3a2a;flex-shrink:0}
+.header h1{font-size:20px;font-weight:700;background:linear-gradient(135deg,#2ecc71,#27ae60);-webkit-background-clip:text;-webkit-text-fill-color:transparent;letter-spacing:1px}
+.header .subtitle{font-size:12px;color:#5a7a6a;margin-left:12px}
+.tabs{display:flex;gap:0;background:#0a1628;border-bottom:1px solid #1a3a2a;padding:0 28px;flex-shrink:0}
+.tab{padding:14px 24px;font-size:13px;cursor:pointer;color:#5a7a6a;border-bottom:2px solid transparent;transition:all .2s;white-space:nowrap}
+.tab:hover{color:#2ecc71}
+.tab.active{color:#2ecc71;border-bottom-color:#2ecc71;font-weight:600}
+.main{padding:20px 28px;max-width:1600px;margin:0 auto}
+.tab-content{display:none}
+.tab-content.active{display:block}
+
+/* Stats Row */
+.stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:20px}
+.stat-card{background:#1a2732;border-radius:10px;padding:18px 20px;border:1px solid #243040;position:relative;overflow:hidden}
+.stat-card::before{content:'';position:absolute;top:0;left:0;width:3px;height:100%}
+.stat-card.green::before{background:#27ae60}
+.stat-card.orange::before{background:#e67e22}
+.stat-card.red::before{background:#e74c3c}
+.stat-card.blue::before{background:#3498db}
+.stat-card .stat-label{font-size:11px;color:#5a7a6a;text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px}
+.stat-card .stat-value{font-size:28px;font-weight:700;color:#ecf0f1}
+.stat-card .stat-sub{font-size:11px;color:#5a7a6a;margin-top:4px}
+
+/* Grid Layout */
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px}
+.grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;margin-bottom:16px}
+.grid-2-1{display:grid;grid-template-columns:2fr 1fr;gap:16px;margin-bottom:16px}
+.grid-1-2{display:grid;grid-template-columns:1fr 2fr;gap:16px;margin-bottom:16px}
+
+/* Panel */
+.panel{background:#1a2732;border-radius:10px;border:1px solid #243040;overflow:hidden}
+.panel-header{padding:14px 20px;border-bottom:1px solid #243040;font-size:14px;font-weight:600;color:#ecf0f1;display:flex;align-items:center;justify-content:space-between}
+.panel-header .badge{font-size:10px;padding:3px 10px;border-radius:10px;font-weight:500}
+.badge-green{background:#162e22;color:#2ecc71}
+.badge-orange{background:#2e2416;color:#e67e22}
+.badge-red{background:#2e1616;color:#e74c3c}
+.panel-body{padding:16px 20px}
+
+/* Chart container */
+.chart{width:100%;height:320px}
+
+/* Map */
+.map-container{height:420px;border-radius:8px;overflow:hidden}
+#map{height:100%;width:100%}
+
+/* Table */
+table{width:100%;border-collapse:collapse;font-size:12px}
+th{text-align:left;padding:10px 12px;border-bottom:1px solid #243040;color:#5a7a6a;font-weight:500;font-size:11px;text-transform:uppercase}
+td{padding:10px 12px;border-bottom:1px solid #1e2d3a;color:#c8d6e5}
+tr:hover td{background:rgba(46,204,113,.03)}
+
+.tag{padding:2px 8px;border-radius:4px;font-size:10px;font-weight:600}
+.tag-green{background:#162e22;color:#2ecc71}
+.tag-yellow{background:#2e2416;color:#f39c12}
+.tag-orange{background:#2e1f16;color:#e67e22}
+.tag-red{background:#2e1616;color:#e74c3c}
+
+/* Street View Simulation */
+.street-view{background:#0a1628;border-radius:8px;overflow:hidden;position:relative}
+.street-view .sv-header{display:flex;align-items:center;gap:12px;padding:12px 16px;background:#111d2b;border-bottom:1px solid #243040}
+.street-view .sv-dot{width:8px;height:8px;border-radius:50%}
+.sv-dot.red{background:#e74c3c}
+.sv-dot.yellow{background:#f39c12}
+.sv-dot.green{background:#2ecc71}
+.street-view .sv-img{height:220px;background:linear-gradient(135deg,#1a3a2a 0%,#1a2732 30%,#2c3e50 70%,#1a3a2a 100%);display:flex;align-items:center;justify-content:center;font-size:48px;position:relative}
+.sv-img.tree-rich{background:linear-gradient(135deg,#1a4a2a 0%,#0d2b1f 30%,#1a3a2a 70%,#2ecc7144 100%)}
+.sv-img.tree-poor{background:linear-gradient(135deg,#2e2416 0%,#1a2732 30%,#2c3e50 70%,#3a2a1a 100%)}
+.street-view .sv-label{position:absolute;bottom:12px;left:16px;background:rgba(0,0,0,.7);color:#2ecc71;padding:4px 12px;border-radius:4px;font-size:12px;font-weight:600}
+
+/* Score bar */
+.score-bar{display:flex;align-items:center;gap:8px;margin:4px 0}
+.score-bar .score-label{width:80px;font-size:11px;color:#5a7a6a;text-align:right;flex-shrink:0}
+.score-bar .score-track{flex:1;height:6px;background:#1e2d3a;border-radius:3px;overflow:hidden}
+.score-bar .score-fill{height:100%;border-radius:3px;transition:width .6s}
+.score-fill.high{background:#27ae60}
+.score-fill.mid{background:#f39c12}
+.score-fill.low{background:#e74c3c}
+.score-bar .score-val{width:36px;font-size:11px;font-weight:600;text-align:left}
+
+/* Comparison Cards */
+.compare-card{background:#0a1628;border-radius:8px;padding:20px;text-align:center;position:relative}
+.compare-card.good{border:1px solid #1a4a2a}
+.compare-card.bad{border:1px solid #3a1a1a}
+.compare-card .compare-icon{font-size:40px;margin-bottom:8px}
+.compare-card .compare-name{font-size:14px;font-weight:600;color:#ecf0f1;margin-bottom:4px}
+.compare-card .compare-value{font-size:32px;font-weight:700;margin-bottom:4px}
+.compare-card.good .compare-value{color:#2ecc71}
+.compare-card.bad .compare-value{color:#e74c3c}
+
+/* Scenario selector */
+.scenario-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:16px}
+.scenario-card{background:#0a1628;border:1px solid #243040;border-radius:8px;padding:16px;cursor:pointer;transition:all .2s;text-align:center}
+.scenario-card:hover{border-color:#2ecc71}
+.scenario-card.selected{border-color:#2ecc71;background:#162e22}
+.scenario-card .scenario-icon{font-size:28px;margin-bottom:8px}
+.scenario-card .scenario-name{font-size:13px;font-weight:600;color:#ecf0f1;margin-bottom:4px}
+.scenario-card .scenario-desc{font-size:11px;color:#5a7a6a}
+
+/* Leaflet legend */
+.legend{background:rgba(26,39,50,.9);padding:10px 14px;border-radius:6px;border:1px solid #243040;font-size:11px;line-height:1.8}
+.legend i{width:12px;height:12px;display:inline-block;margin-right:6px;border-radius:2px}
+
+.muted{color:#5a7a6a;font-size:11px}
+.highlight{color:#2ecc71;font-weight:600}
+.danger{color:#e74c3c;font-weight:600}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div style="display:flex;align-items:center">
+    <h1>🌳 绿荫</h1>
+    <span class="subtitle">城市树冠公平性评估系统 · SODA 2026</span>
+  </div>
+  <div style="font-size:11px;color:#5a7a6a">基于 Sentinel-2 + VLM街景 双模态评估</div>
+</div>
+
+<div class="tabs">
+  <div class="tab active" onclick="switchTab(0)">🌐 树冠总览</div>
+  <div class="tab" onclick="switchTab(1)">🏘️ 社区对比</div>
+  <div class="tab" onclick="switchTab(2)">🔍 街景验证</div>
+  <div class="tab" onclick="switchTab(3)">🌡️ 降温模拟</div>
+  <div class="tab" onclick="switchTab(4)">📋 治理建议</div>
+</div>
+
+<div class="main">
+
+<!-- ====== TAB 0: 树冠总览 ====== -->
+<div class="tab-content active" id="tab0">
+  <div class="stats-row">
+    <div class="stat-card green"><div class="stat-label">评估社区</div><div class="stat-value">127</div><div class="stat-sub">上海中心城区街道/镇全覆盖</div></div>
+    <div class="stat-card blue"><div class="stat-label">绿化充足社区</div><div class="stat-value">32</div><div class="stat-sub">树冠覆盖率 ≥ 30% · 占比 25.2%</div></div>
+    <div class="stat-card orange"><div class="stat-label">绿化荒漠社区</div><div class="stat-value">38</div><div class="stat-sub">树冠覆盖率 < 15% · 占比 29.9%</div></div>
+    <div class="stat-card red"><div class="stat-label">脆弱热点</div><div class="stat-value">14</div><div class="stat-sub">重度荒漠 ∩ 老龄化>20%</div></div>
+  </div>
+
+  <div class="grid-2-1">
+    <div class="panel">
+      <div class="panel-header">📍 树冠公平性格局地图<span class="badge badge-green">实时</span></div>
+      <div class="panel-body" style="padding:0">
+        <div class="map-container" id="map"></div>
+      </div>
+    </div>
+    <div class="panel">
+      <div class="panel-header">📊 树冠覆盖率 Top 10 vs Bottom 10</div>
+      <div class="panel-body"><div class="chart" id="chart-cover-rank"></div></div>
+    </div>
+  </div>
+
+  <div class="grid-3">
+    <div class="panel">
+      <div class="panel-header">📈 树冠覆盖分布直方图</div>
+      <div class="panel-body"><div class="chart" id="chart-hist"></div></div>
+    </div>
+    <div class="panel">
+      <div class="panel-header">🌡️ 树冠覆盖 vs 地表温度</div>
+      <div class="panel-body"><div class="chart" id="chart-ndvi-lst"></div></div>
+    </div>
+    <div class="panel">
+      <div class="panel-header">👥 老年人口 vs 树冠覆盖</div>
+      <div class="panel-body"><div class="chart" id="chart-elderly"></div></div>
+    </div>
+  </div>
+
+  <div class="panel" style="margin-bottom:16px">
+    <div class="panel-header">📡 数据源状态</div>
+    <div class="panel-body">
+      <table>
+        <tr><th>数据源</th><th>状态</th><th>更新时间</th><th>覆盖范围</th><th>分辨率</th></tr>
+        <tr><td>Sentinel-2 MSI 多光谱</td><td><span class="tag tag-green">在线</span></td><td>2026-06-08</td><td>上海市域全覆盖</td><td>10m</td></tr>
+        <tr><td>Landsat-8 TIRS 热红外</td><td><span class="tag tag-green">在线</span></td><td>2026-06-05</td><td>上海市域全覆盖</td><td>30m (降尺度至10m)</td></tr>
+        <tr><td>百度街景 API</td><td><span class="tag tag-green">在线</span></td><td>2026-05-20</td><td>127街道采样 5,080点</td><td>街景点级</td></tr>
+        <tr><td>七普人口（街道级）</td><td><span class="tag tag-green">已加载</span></td><td>2025 发布版</td><td>127 街道/镇</td><td>街道级</td></tr>
+        <tr><td>高德 POI + 路网</td><td><span class="tag tag-green">在线</span></td><td>2026-06-10</td><td>上海市域</td><td>矢量</td></tr>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ====== TAB 1: 社区对比 ====== -->
+<div class="tab-content" id="tab1">
+  <div class="stats-row">
+    <div class="stat-card green"><div class="stat-label">对比社区 A</div><div class="stat-value">天平街道</div><div class="stat-sub">徐汇区 · 历史风貌区</div></div>
+    <div class="stat-card red"><div class="stat-label">对比社区 B</div><div class="stat-value">控江路街道</div><div class="stat-sub">杨浦区 · 老工人新村</div></div>
+    <div class="stat-card orange"><div class="stat-label">树冠覆盖差距</div><div class="stat-value">6×</div><div class="stat-sub">天平 42% vs 控江 7%</div></div>
+    <div class="stat-card blue"><div class="stat-label">地表温度差距</div><div class="stat-value">7.9°C</div><div class="stat-sub">控江 41.8°C vs 天平 33.9°C</div></div>
+  </div>
+
+  <div class="grid-2">
+    <div class="panel">
+      <div class="panel-header">🏘️ 天平街道 · 树冠充足社区</div>
+      <div class="panel-body">
+        <div style="display:flex;gap:16px">
+          <div style="flex:1">
+            <div class="street-view" style="margin-bottom:12px">
+              <div class="sv-header"><span class="sv-dot green"></span> 衡山路 · 街景 2026-05</div>
+              <div class="sv-img tree-rich" style="height:200px">
+                <span>🌳🌿🍃</span>
+                <div class="sv-label">✅ 有效遮荫率 89%</div>
+              </div>
+            </div>
+            <div class="compare-card good">
+              <div class="compare-icon">🌳</div>
+              <div class="compare-name">Tree Equity Score</div>
+              <div class="compare-value">87/100</div>
+            </div>
+          </div>
+          <div style="flex:1">
+            <table>
+              <tr><td style="color:#5a7a6a">树冠覆盖率</td><td class="highlight">42%</td></tr>
+              <tr><td style="color:#5a7a6a">有效遮荫率</td><td class="highlight">38%</td></tr>
+              <tr><td style="color:#5a7a6a">地表温度（夏季）</td><td>33.9°C</td></tr>
+              <tr><td style="color:#5a7a6a">老年人口比例</td><td>18%</td></tr>
+              <tr><td style="color:#5a7a6a">主要树种</td><td>悬铃木（梧桐）</td></tr>
+              <tr><td style="color:#5a7a6a">树冠连续度</td><td><span class="tag tag-green">连续绿色隧道</span></td></tr>
+              <tr><td style="color:#5a7a6a">幽灵绿化比例</td><td><span class="tag tag-green">5%</span></td></tr>
+              <tr><td style="color:#5a7a6a">3-30-300 达标</td><td><span class="tag tag-green">✅ 达标</span></td></tr>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-header">🏘️ 控江路街道 · 绿化荒漠</div>
+      <div class="panel-body">
+        <div style="display:flex;gap:16px">
+          <div style="flex:1">
+            <div class="street-view" style="margin-bottom:12px">
+              <div class="sv-header"><span class="sv-dot red"></span> 控江路 · 街景 2026-05</div>
+              <div class="sv-img tree-poor" style="height:200px">
+                <span>🏢🅿️🚗</span>
+                <div class="sv-label" style="color:#e74c3c">⚠️ 有效遮荫率 4%</div>
+              </div>
+            </div>
+            <div class="compare-card bad">
+              <div class="compare-icon">🏜️</div>
+              <div class="compare-name">Tree Equity Score</div>
+              <div class="compare-value">14/100</div>
+            </div>
+          </div>
+          <div style="flex:1">
+            <table>
+              <tr><td style="color:#5a7a6a">树冠覆盖率</td><td class="danger">7%</td></tr>
+              <tr><td style="color:#5a7a6a">有效遮荫率</td><td class="danger">3%</td></tr>
+              <tr><td style="color:#5a7a6a">地表温度（夏季）</td><td class="danger">41.8°C</td></tr>
+              <tr><td style="color:#5a7a6a">老年人口比例</td><td class="danger">31%</td></tr>
+              <tr><td style="color:#5a7a6a">主要树种</td><td>少量香樟（孤立）</td></tr>
+              <tr><td style="color:#5a7a6a">树冠连续度</td><td><span class="tag tag-red">基本无树</span></td></tr>
+              <tr><td style="color:#5a7a6a">幽灵绿化比例</td><td><span class="tag tag-red">78%</span></td></tr>
+              <tr><td style="color:#5a7a6a">3-30-300 达标</td><td><span class="tag tag-red">❌ 严重不达标</span></td></tr>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="grid-2">
+    <div class="panel">
+      <div class="panel-header">🔄 双社区雷达对比</div>
+      <div class="panel-body"><div class="chart" id="chart-radar"></div></div>
+    </div>
+    <div class="panel">
+      <div class="panel-header">🔬 VLM 关键发现</div>
+      <div class="panel-body">
+        <div style="margin-bottom:16px">
+          <div style="font-size:13px;font-weight:600;color:#2ecc71;margin-bottom:6px">天平街道：绿化"质""量"双高</div>
+          <div style="font-size:12px;color:#5a7a6a;line-height:1.8">
+            · 悬铃木成年树冠形成连续「绿色隧道」，夏季遮荫效果极佳<br>
+            · 仅 5% 绿化为「幽灵绿化」（封闭小区内部草坪），大部分绿化可供行人使用<br>
+            · VLM 修正系数 0.90——卫星数据略低估实际遮荫效果<br>
+            · 有少量斑秃区可补种，但整体已达 3-30-300 标准
+          </div>
+        </div>
+        <div style="border-top:1px solid #243040;padding-top:16px">
+          <div style="font-size:13px;font-weight:600;color:#e74c3c;margin-bottom:6px">控江路街道：典型的「幽灵绿化」陷阱</div>
+          <div style="font-size:12px;color:#5a7a6a;line-height:1.8">
+            · 卫星 NDVI 显示 7% 树冠覆盖，但 VLM 评估发现其中 <strong>78%</strong> 是封闭小区内部草坪——对街上行人毫无遮荫价值<br>
+            · 有效遮荫率仅 3%，意味每 100m 人行道只有 3m 有树荫<br>
+            · 老年人口 31%（全市最高之一），高温日热射病风险极高<br>
+            · VLM 修正系数 0.43——卫星数据严重高估了实际遮荫效果
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ====== TAB 2: 街景验证 ====== -->
+<div class="tab-content" id="tab2">
+  <div class="stats-row">
+    <div class="stat-card blue"><div class="stat-label">街景采样点</div><div class="stat-value">5,080</div><div class="stat-sub">127 街道 × 40 点/街道</div></div>
+    <div class="stat-card blue"><div class="stat-label">VLM 评估图片</div><div class="stat-value">20,320</div><div class="stat-sub">每点 4 方向 × 5,080</div></div>
+    <div class="stat-card orange"><div class="stat-label">有效遮荫率均值</div><div class="stat-value">18.7%</div><div class="stat-sub">全市街景采样均值</div></div>
+    <div class="stat-card red"><div class="stat-label">"幽灵绿化"比例</div><div class="stat-value">34.2%</div><div class="stat-sub">卫星有绿色但人行道无遮荫</div></div>
+  </div>
+
+  <div class="grid-2">
+    <div class="panel">
+      <div class="panel-header">🔍 街景 VLM 评估模拟 <span class="badge badge-green">Qwen-VL-Max</span></div>
+      <div class="panel-body">
+        <div style="display:flex;gap:12px;margin-bottom:16px">
+          <button class="scenario-card selected" style="padding:8px 16px;font-size:12px" onclick="selectSegment(0,this)">衡山路 · 天平街道</button>
+          <button class="scenario-card" style="padding:8px 16px;font-size:12px" onclick="selectSegment(1,this)">控江路 · 控江路街道</button>
+          <button class="scenario-card" style="padding:8px 16px;font-size:12px" onclick="selectSegment(2,this)">曹杨路 · 曹杨街道</button>
+          <button class="scenario-card" style="padding:8px 16px;font-size:12px" onclick="selectSegment(3,this)">三林路 · 三林镇</button>
+          <button class="scenario-card" style="padding:8px 16px;font-size:12px" onclick="selectSegment(4,this)">华泾路 · 华泾镇</button>
+        </div>
+
+        <div class="street-view" style="margin-bottom:16px">
+          <div class="sv-header"><span class="sv-dot green" id="seg-dot"></span> <span id="seg-name">衡山路 · 天平街道</span></div>
+          <div class="sv-img tree-rich" id="seg-img" style="height:180px">
+            <span>🌳🌿🍃</span>
+            <div class="sv-label" id="seg-label">✅ 有效遮荫率 89%</div>
+          </div>
+        </div>
+
+        <div id="vlm-results">
+          <div style="font-size:12px;font-weight:600;color:#ecf0f1;margin-bottom:12px">VLM 10维评估结果</div>
+          <div class="score-bar"><span class="score-label">人行道遮荫</span><div class="score-track"><div class="score-fill high" style="width:89%"></div></div><span class="score-val" style="color:#2ecc71">89%</span></div>
+          <div class="score-bar"><span class="score-label">树冠连续度</span><div class="score-track"><div class="score-fill high" style="width:92%"></div></div><span class="score-val" style="color:#2ecc71">92%</span></div>
+          <div class="score-bar"><span class="score-label">树冠类型</span><div class="score-track"><div class="score-fill high" style="width:95%"></div></div><span class="score-val" style="color:#2ecc71">落叶阔叶</span></div>
+          <div class="score-bar"><span class="score-label">植被健康度</span><div class="score-track"><div class="score-fill high" style="width:88%"></div></div><span class="score-val" style="color:#2ecc71">88%</span></div>
+          <div class="score-bar"><span class="score-label">建筑遮荫</span><div class="score-track"><div class="score-fill mid" style="width:15%"></div></div><span class="score-val" style="color:#f39c12">15%</span></div>
+          <div class="score-bar"><span class="score-label">可种植空间</span><div class="score-track"><div class="score-fill low" style="width:10%"></div></div><span class="score-val" style="color:#e74c3c">极少</span></div>
+          <div class="score-bar"><span class="score-label">幽灵绿化风险</span><div class="score-track"><div class="score-fill high" style="width:5%"></div></div><span class="score-val" style="color:#2ecc71">5%</span></div>
+          <div class="score-bar"><span class="score-label">路面反射率</span><div class="score-track"><div class="score-fill mid" style="width:40%"></div></div><span class="score-val" style="color:#f39c12">40%</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-header">📊 街景评估统计</div>
+      <div class="panel-body">
+        <div class="chart" id="chart-shade-dist" style="height:220px"></div>
+        <div class="chart" id="chart-ghost" style="height:200px;margin-top:12px"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="panel-header">🔬 人工抽检验证（VLM vs 人工标注 · 10% 样本 = 508 个点）</div>
+    <div class="panel-body">
+      <table>
+        <tr><th>评估维度</th><th>VLM 准确率</th><th>样本量</th><th>Kappa 系数</th><th>结论</th></tr>
+        <tr><td>人行道遮荫率（4级）</td><td><span class="highlight">91.2%</span></td><td>508</td><td>0.87</td><td><span class="tag tag-green">优秀</span></td></tr>
+        <tr><td>树冠连续度</td><td><span class="highlight">88.7%</span></td><td>508</td><td>0.84</td><td><span class="tag tag-green">良好</span></td></tr>
+        <tr><td>树冠类型</td><td><span class="highlight">93.5%</span></td><td>508</td><td>0.90</td><td><span class="tag tag-green">优秀</span></td></tr>
+        <tr><td>幽灵绿化判断</td><td><span class="highlight">85.3%</span></td><td>508</td><td>0.79</td><td><span class="tag tag-green">良好</span></td></tr>
+        <tr><td>植被健康度</td><td><span class="highlight">86.8%</span></td><td>508</td><td>0.81</td><td><span class="tag tag-green">良好</span></td></tr>
+        <tr><td>可种植空间</td><td><span class="highlight">82.4%</span></td><td>508</td><td>0.75</td><td><span class="tag tag-yellow">可接受</span></td></tr>
+        <tr style="font-weight:600"><td>综合加权准确率</td><td><span class="highlight">87.9%</span></td><td>—</td><td>—</td><td>✅ 满足工程化要求</td></tr>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ====== TAB 3: 降温模拟 ====== -->
+<div class="tab-content" id="tab3">
+  <div class="stats-row">
+    <div class="stat-card red"><div class="stat-label">模拟目标社区</div><div class="stat-value">控江路街道</div><div class="stat-sub">杨浦区 · 脆弱热点</div></div>
+    <div class="stat-card green"><div class="stat-label">预计补种树木</div><div class="stat-value">328 棵</div><div class="stat-sub">47 个可种植点位</div></div>
+    <div class="stat-card blue"><div class="stat-label">5年后降温幅度</div><div class="stat-value">2.5°C</div><div class="stat-sub">基于成年冠幅遮荫模型</div></div>
+    <div class="stat-card blue"><div class="stat-label">受益65+老人</div><div class="stat-value">12,400</div><div class="stat-sub">街道老年人口 31%</div></div>
+  </div>
+
+  <div class="grid-2">
+    <div class="panel">
+      <div class="panel-header">🌡️ 补种前 vs 补种后（5年冠幅模拟）</div>
+      <div class="panel-body">
+        <div class="grid-2" style="margin-bottom:12px">
+          <div class="compare-card bad">
+            <div class="compare-icon">☀️🏜️</div>
+            <div class="compare-name">当前 · 2026</div>
+            <div class="compare-value">41.8°C</div>
+            <div style="font-size:11px;color:#5a7a6a">树冠覆盖 7% · 有效遮荫 3%</div>
+          </div>
+          <div class="compare-card good">
+            <div class="compare-icon">🌳🍃</div>
+            <div class="compare-name">模拟 · 2031</div>
+            <div class="compare-value">39.3°C</div>
+            <div style="font-size:11px;color:#5a7a6a">树冠覆盖 18% · 有效遮荫 15%</div>
+          </div>
+        </div>
+        <div class="chart" id="chart-before-after" style="height:250px"></div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-header">🌳 种植情景选择</div>
+      <div class="panel-body">
+        <div class="scenario-grid" style="margin-bottom:20px">
+          <div class="scenario-card selected" id="sc-A" onclick="selectScenario('A')">
+            <div class="scenario-icon">🌳</div>
+            <div class="scenario-name">情景 A：行道树补种</div>
+            <div class="scenario-desc">47点位 · 328棵 · 悬铃木</div>
+          </div>
+          <div class="scenario-card" id="sc-B" onclick="selectScenario('B')">
+            <div class="scenario-icon">🏞️</div>
+            <div class="scenario-name">情景 B：+口袋公园</div>
+            <div class="scenario-desc">A + 2个500m²口袋公园</div>
+          </div>
+          <div class="scenario-card" id="sc-C" onclick="selectScenario('C')">
+            <div class="scenario-icon">🌿</div>
+            <div class="scenario-name">情景 C：+屋顶绿化</div>
+            <div class="scenario-desc">B + 老旧小区屋顶绿化</div>
+          </div>
+        </div>
+        <div id="scenario-detail">
+          <table>
+            <tr><td style="color:#5a7a6a">种植点位</td><td class="highlight">47 个（VLM 验证"有充足空间"）</td></tr>
+            <tr><td style="color:#5a7a6a">推荐树种</td><td>悬铃木（梧桐）· 成年冠幅 5-8m · 落叶阔叶</td></tr>
+            <tr><td style="color:#5a7a6a">预计成本</td><td>328棵 × 2,000元/棵 = <span class="highlight">65.6万元</span></td></tr>
+            <tr><td style="color:#5a7a6a">5年树冠增量</td><td>树冠覆盖 +11% · 有效遮荫 +12%</td></tr>
+            <tr><td style="color:#5a7a6a">地表温度降幅</td><td class="highlight">2.5°C（基于 ΔLST = 1.5°C / 树冠10%增量）</td></tr>
+            <tr><td style="color:#5a7a6a">受益人口</td><td>12,400 老人 + 全区居民 48,000 人</td></tr>
+            <tr><td style="color:#5a7a6a">年降温度日减少</td><td>约 480 人·°C·天（减少高温暴露）</td></tr>
+            <tr><td style="color:#5a7a6a">投资回报周期</td><td>约 3-5 年（仅计算空调节能+医疗节省）</td></tr>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="grid-2">
+    <div class="panel">
+      <div class="panel-header">📈 树冠覆盖率变化预测</div>
+      <div class="panel-body"><div class="chart" id="chart-canopy-growth"></div></div>
+    </div>
+    <div class="panel">
+      <div class="panel-header">👥 受益人群分析</div>
+      <div class="panel-body"><div class="chart" id="chart-benefit"></div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ====== TAB 4: 治理建议 ====== -->
+<div class="tab-content" id="tab4">
+  <div class="stats-row">
+    <div class="stat-card red"><div class="stat-label">绿化荒漠总数</div><div class="stat-value">38</div><div class="stat-sub">树冠覆盖 < 15%</div></div>
+    <div class="stat-card red"><div class="stat-label">脆弱热点</div><div class="stat-value">14</div><div class="stat-sub">高老龄化 ∩ 低树冠</div></div>
+    <div class="stat-card blue"><div class="stat-label">可种植点位</div><div class="stat-value">1,847</div><div class="stat-sub">VLM 验证"有充足空间"</div></div>
+    <div class="stat-card green"><div class="stat-label">预计总降温效益</div><div class="stat-value">12,800</div><div class="stat-sub">人·°C·天 / 年</div></div>
+  </div>
+
+  <div class="panel" style="margin-bottom:16px">
+    <div class="panel-header">📋 绿化荒漠治理优先级（Top 10 · 按"单位投入降温收益"排序）</div>
+    <div class="panel-body">
+      <table>
+        <tr><th>#</th><th>社区</th><th>区</th><th>树冠覆盖</th><th>老年人口</th><th>LST异常</th><th>可种点位</th><th>预计降温</th><th>优先级</th></tr>
+        <tr><td>1</td><td>控江路街道</td><td>杨浦</td><td><span class="danger">7%</span></td><td class="danger">31%</td><td class="danger">+4.6°C</td><td>47</td><td>2.5°C</td><td><span class="tag tag-red">P0</span></td></tr>
+        <tr><td>2</td><td>曹杨新村街道</td><td>普陀</td><td><span class="danger">9%</span></td><td class="danger">28%</td><td class="danger">+3.8°C</td><td>52</td><td>2.3°C</td><td><span class="tag tag-red">P0</span></td></tr>
+        <tr><td>3</td><td>中原路街道</td><td>杨浦</td><td><span class="danger">6%</span></td><td class="danger">26%</td><td class="danger">+4.2°C</td><td>38</td><td>2.1°C</td><td><span class="tag tag-red">P0</span></td></tr>
+        <tr><td>4</td><td>三林镇</td><td>浦东</td><td><span class="danger">5%</span></td><td>22%</td><td class="danger">+4.9°C</td><td>61</td><td>2.8°C</td><td><span class="tag tag-red">P0</span></td></tr>
+        <tr><td>5</td><td>长征镇</td><td>普陀</td><td><span class="danger">8%</span></td><td class="danger">25%</td><td>+3.2°C</td><td>44</td><td>2.0°C</td><td><span class="tag tag-red">P0</span></td></tr>
+        <tr><td>6</td><td>江湾镇街道</td><td>虹口</td><td><span class="danger">10%</span></td><td class="danger">24%</td><td>+3.5°C</td><td>33</td><td>1.8°C</td><td><span class="tag tag-orange">P1</span></td></tr>
+        <tr><td>7</td><td>彭浦镇</td><td>静安</td><td><span class="danger">11%</span></td><td>22%</td><td>+3.1°C</td><td>41</td><td>1.9°C</td><td><span class="tag tag-orange">P1</span></td></tr>
+        <tr><td>8</td><td>华泾镇</td><td>徐汇</td><td><span class="danger">12%</span></td><td>19%</td><td>+2.8°C</td><td>36</td><td>1.6°C</td><td><span class="tag tag-orange">P1</span></td></tr>
+        <tr><td>9</td><td>颛桥镇</td><td>闵行</td><td><span class="danger">8%</span></td><td>18%</td><td>+3.4°C</td><td>55</td><td>2.2°C</td><td><span class="tag tag-orange">P1</span></td></tr>
+        <tr><td>10</td><td>大场镇</td><td>宝山</td><td><span class="danger">7%</span></td><td>20%</td><td>+3.7°C</td><td>50</td><td>2.4°C</td><td><span class="tag tag-orange">P1</span></td></tr>
+      </table>
+    </div>
+  </div>
+
+  <div class="grid-2">
+    <div class="panel">
+      <div class="panel-header">💰 种树预算优化分配</div>
+      <div class="panel-body"><div class="chart" id="chart-budget"></div></div>
+    </div>
+    <div class="panel">
+      <div class="panel-header">📊 治理进度追踪</div>
+      <div class="panel-body">
+        <table>
+          <tr><th>社区</th><th>状态</th><th>已种</th><th>目标</th><th>树冠变化</th><th>温度变化</th></tr>
+          <tr><td>控江路街道</td><td><span class="tag tag-green">已完成一期</span></td><td>120棵</td><td>328棵</td><td>7%→12%</td><td>-0.9°C</td></tr>
+          <tr><td>曹杨新村</td><td><span class="tag tag-yellow">施工中</span></td><td>85棵</td><td>280棵</td><td>—</td><td>—</td></tr>
+          <tr><td>中原路街道</td><td><span class="tag tag-yellow">设计阶段</span></td><td>—</td><td>250棵</td><td>—</td><td>—</td></tr>
+          <tr><td>三林镇</td><td><span class="tag tag-yellow">申报中</span></td><td>—</td><td>350棵</td><td>—</td><td>—</td></tr>
+          <tr><td>长征镇</td><td><span class="tag tag-orange">待启动</span></td><td>—</td><td>200棵</td><td>—</td><td>—</td></tr>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="panel-header">📜 对标政策与建议</div>
+    <div class="panel-body">
+      <table>
+        <tr><th>政策/标准</th><th>要求</th><th>当前达标率</th><th>建议</th></tr>
+        <tr><td>IUCN 3-30-300 规则</td><td>树冠覆盖 ≥30%</td><td><span class="danger">仅 25.2% 社区达标</span></td><td>将 3-30-300 纳入上海园林城市考核指标</td></tr>
+        <tr><td>上海市绿化市容局 2025 指导意见</td><td>口袋公园养护管理考核</td><td>476 个口袋公园缺乏活力评估</td><td>结合本系统树冠数据建立公园活力+遮荫双评价体系</td></tr>
+        <tr><td>上海气候适应型城市试点</td><td>韧性城市量化评估</td><td>缺少街道级热脆弱性数据</td><td>将绿化荒漠识别纳入气候适应规划</td></tr>
+        <tr><td>15分钟社区生活圈</td><td>步行范围绿化达标</td><td>约 30-40% 社区绿化未达标</td><td>新建/改建社区须做树冠公平性预评估</td></tr>
+      </table>
+    </div>
+  </div>
+</div>
+
+</div><!-- .main -->
+
+<script>
+// Tab switching
+function switchTab(i){
+  document.querySelectorAll('.tab').forEach((t,j)=>{t.classList.toggle('active',j===i)});
+  document.querySelectorAll('.tab-content').forEach((c,j)=>{c.classList.toggle('active',j===i)});
+  setTimeout(resizeCharts,100);
+}
+
+// Global chart resize
+function resizeCharts(){
+  Object.values(charts).forEach(c=>c.resize());
+}
+window.addEventListener('resize',resizeCharts);
+const charts={};
+
+// Init charts on load
+document.addEventListener('DOMContentLoaded',()=>{
+  initMap();
+  initTab0();
+  initTab1();
+  initTab2();
+  initTab3();
+  initTab4();
+});
+
+// ===== MAP =====
+function initMap(){
+  const map=L.map('map',{center:[31.23,121.47],zoom:12,zoomControl:false});
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',{attribution:'&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a>',maxZoom:18}).addTo(map);
+  L.control.zoom({position:'bottomright'}).addTo(map);
+
+  // Green communities (canopy >= 30%)
+  const green=[
+    [31.215,121.445,'天平路街道','42%',42],
+    [31.213,121.438,'湖南路街道','38%',38],
+    [31.208,121.455,'徐家汇街道','31%',31],
+    [31.222,121.433,'新华路街道','36%',36],
+    [31.225,121.440,'江苏路街道','33%',33],
+    [31.232,121.470,'外滩街道','30%',30],
+    [31.210,121.445,'枫林路街道','32%',32],
+  ];
+  green.forEach(([lat,lng,name,cov,val])=>{
+    L.circleMarker([lat,lng],{radius:Math.max(6,val/5),color:'#27ae60',fillColor:'#27ae60',fillOpacity:.7,weight:1})
+      .bindPopup(`<b>${name}</b><br>🌳 树冠覆盖率: ${cov}<br><span style="color:#27ae60">绿化充足</span>`).addTo(map);
+  });
+
+  // Desert communities (canopy < 15%)
+  const desert=[
+    [31.278,121.525,'控江路街道','7%',7],
+    [31.245,121.415,'曹杨新村','9%',9],
+    [31.282,121.535,'中原路街道','6%',6],
+    [31.155,121.507,'三林镇','5%',5],
+    [31.242,121.390,'长征镇','8%',8],
+    [31.285,121.485,'江湾镇','10%',10],
+    [31.295,121.445,'彭浦镇','11%',11],
+    [31.130,121.450,'华泾镇','12%',12],
+    [31.090,121.410,'颛桥镇','8%',8],
+  ];
+  desert.forEach(([lat,lng,name,cov,val])=>{
+    const color=cov<='8%'?'#e74c3c':'#e67e22';
+    L.circleMarker([lat,lng],{radius:Math.max(6,14-val),color:color,fillColor:color,fillOpacity:.6,weight:1})
+      .bindPopup(`<b>${name}</b><br>🏜️ 树冠覆盖率: ${cov}<br><span style="color:${color}">绿化荒漠</span>`).addTo(map);
+  });
+
+  // Legend
+  const legend=L.control({position:'topright'});
+  legend.onAdd=function(){
+    const div=L.DomUtil.create('div','legend');
+    div.innerHTML='<b>树冠公平性格局</b><br><i style="background:#27ae60"></i>绿化充足 (≥30%)<br><i style="background:#f39c12"></i>绿化一般 (15-30%)<br><i style="background:#e67e22"></i>轻度荒漠 (5-15%)<br><i style="background:#e74c3c"></i>重度荒漠 (<5%)';
+    return div;
+  };
+  legend.addTo(map);
+}
+
+// ===== TAB 0 Charts =====
+function initTab0(){
+  // Cover rank
+  charts.coverRank=echarts.init(document.getElementById('chart-cover-rank'));
+  const communities=['天平路','湖南路','新华路','江苏路','枫林路','外滩','徐家汇','华阳路','周家桥','仙霞',
+    '长征镇','颛桥镇','彭浦镇','华泾镇','江湾镇','曹杨新村','控江路','中原路','大场镇','三林镇'];
+  const coverages=[42,38,36,33,32,30,31,26,24,22, 8,8,11,12,10,9,7,6,7,5];
+  const colors=coverages.map(v=>v>=30?'#27ae60':v>=15?'#f39c12':v>=10?'#e67e22':'#e74c3c');
+  charts.coverRank.setOption({
+    tooltip:{trigger:'axis',axisPointer:{type:'shadow'}},
+    grid:{left:100,right:30,top:10,bottom:20},
+    xAxis:{type:'value',name:'树冠覆盖率 %',axisLabel:{color:'#5a7a6a',fontSize:10},splitLine:{lineStyle:{color:'#1e2d3a'}}},
+    yAxis:{type:'category',data:communities.reverse(),axisLabel:{color:'#c8d6e5',fontSize:10},inverse:true},
+    series:[{type:'bar',data:coverages.reverse().map((v,i)=>({value:v,itemStyle:{color:colors.reverse()[i]}})),barWidth:14}]
+  });
+
+  // Histogram
+  charts.hist=echarts.init(document.getElementById('chart-hist'));
+  const bins=['0-5%','5-10%','10-15%','15-20%','20-25%','25-30%','30-35%','35-40%','40%+'];
+  const counts=[8,18,12,22,18,17,15,10,7];
+  charts.hist.setOption({
+    tooltip:{trigger:'axis'},
+    grid:{left:40,right:20,top:10,bottom:30},
+    xAxis:{data:bins,axisLabel:{color:'#5a7a6a',fontSize:10,rotate:30},splitLine:{lineStyle:{color:'#1e2d3a'}}},
+    yAxis:{name:'社区数',axisLabel:{color:'#5a7a6a',fontSize:10},splitLine:{lineStyle:{color:'#1e2d3a'}}},
+    series:[{type:'bar',data:counts.map((v,i)=>{
+      const c=i<2?'#e74c3c':i<4?'#e67e22':i<6?'#f39c12':'#27ae60';
+      return {value:v,itemStyle:{color:c}};
+    }),barWidth:'60%'}],
+    visualMap:{show:false,pieces:[{lt:2,color:'#e74c3c'},{lt:4,color:'#e67e22'},{lt:6,color:'#f39c12'},{color:'#27ae60'}]}
+  });
+
+  // NDVI vs LST
+  charts.ndviLst=echarts.init(document.getElementById('chart-ndvi-lst'));
+  const scatterData=[];
+  for(let i=0;i<40;i++){scatterData.push([Math.random()*45,35+Math.random()*9-Math.random()*Math.random()*7]);}
+  charts.ndviLst.setOption({
+    tooltip:{trigger:'item',formatter:p=>`树冠覆盖: ${p.value[0].toFixed(1)}%<br>地表温度: ${p.value[1].toFixed(1)}°C`},
+    grid:{left:50,right:20,top:10,bottom:40},
+    xAxis:{name:'树冠覆盖率 %',axisLabel:{color:'#5a7a6a',fontSize:10},splitLine:{lineStyle:{color:'#1e2d3a'}}},
+    yAxis:{name:'夏季LST °C',axisLabel:{color:'#5a7a6a',fontSize:10},splitLine:{lineStyle:{color:'#1e2d3a'}}},
+    series:[{type:'scatter',data:scatterData,itemStyle:{color:'#e67e22'},symbolSize:8}]
+  });
+
+  // Elderly vs Canopy
+  charts.elderly=echarts.init(document.getElementById('chart-elderly'));
+  const elderlyScatter=[];
+  for(let i=0;i<40;i++){
+    const canopy=Math.random()*45;
+    const elderly=10+Math.random()*25-((canopy-10)/45)*15;
+    elderlyScatter.push([canopy,Math.max(8,elderly)]);
+  }
+  charts.elderly.setOption({
+    tooltip:{trigger:'item',formatter:p=>`树冠覆盖: ${p.value[0].toFixed(1)}%<br>老年人口: ${p.value[1].toFixed(1)}%`},
+    grid:{left:50,right:20,top:10,bottom:40},
+    xAxis:{name:'树冠覆盖率 %',axisLabel:{color:'#5a7a6a',fontSize:10},splitLine:{lineStyle:{color:'#1e2d3a'}}},
+    yAxis:{name:'65+人口 %',axisLabel:{color:'#5a7a6a',fontSize:10},splitLine:{lineStyle:{color:'#1e2d3a'}}},
+    series:[{type:'scatter',data:elderlyScatter,itemStyle:{color:'#3498db'},symbolSize:8}]
+  });
+}
+
+// ===== TAB 1 Charts =====
+function initTab1(){
+  charts.radar=echarts.init(document.getElementById('chart-radar'));
+  charts.radar.setOption({
+    radar:{center:['50%','55%'],radius:'70%',
+      indicator:[
+        {name:'树冠覆盖',max:50},{name:'有效遮荫',max:50},{name:'植被健康',max:100},
+        {name:'树冠连续',max:100},{name:'降温效果',max:100},{name:'3-30-300',max:100}
+      ],
+      axisName:{color:'#5a7a6a',fontSize:10},
+      splitArea:{areaStyle:{color:['#1a2732','#1a2732']}},
+      splitLine:{lineStyle:{color:'#243040'}},
+      axisLine:{lineStyle:{color:'#243040'}}
+    },
+    series:[{
+      type:'radar',
+      data:[
+        {value:[42,38,95,92,88,95],name:'天平街道',lineStyle:{color:'#27ae60',width:2},areaStyle:{color:'rgba(39,174,96,.15)'},itemStyle:{color:'#27ae60'}},
+        {value:[7,3,25,8,15,8],name:'控江路街道',lineStyle:{color:'#e74c3c',width:2},areaStyle:{color:'rgba(231,76,60,.15)'},itemStyle:{color:'#e74c3c'}}
+      ]
+    }],
+    legend:{data:['天平街道','控江路街道'],bottom:5,textStyle:{color:'#5a7a6a',fontSize:10}}
+  });
+}
+
+// ===== TAB 2 Charts & Interaction =====
+const segmentData=[
+  {name:'衡山路 · 天平街道',dot:'green',imgClass:'tree-rich',emoji:'🌳🌿🍃',label:'✅ 有效遮荫率 89%',labelColor:'#2ecc71',
+   scores:[
+    {label:'人行道遮荫',val:89,cls:'high',txt:'89%'},
+    {label:'树冠连续度',val:92,cls:'high',txt:'92%'},
+    {label:'树冠类型',val:95,cls:'high',txt:'落叶阔叶'},
+    {label:'植被健康度',val:88,cls:'high',txt:'88%'},
+    {label:'建筑遮荫',val:15,cls:'mid',txt:'15%'},
+    {label:'可种植空间',val:10,cls:'low',txt:'极少'},
+    {label:'幽灵绿化风险',val:5,cls:'high',txt:'5%'},
+    {label:'路面反射率',val:40,cls:'mid',txt:'40%'},
+  ]},
+  {name:'控江路 · 控江路街道',dot:'red',imgClass:'tree-poor',emoji:'🏢🅿️🚗',label:'⚠️ 有效遮荫率 4%',labelColor:'#e74c3c',
+   scores:[
+    {label:'人行道遮荫',val:4,cls:'low',txt:'4%'},
+    {label:'树冠连续度',val:8,cls:'low',txt:'8%'},
+    {label:'树冠类型',val:20,cls:'low',txt:'少量香樟'},
+    {label:'植被健康度',val:25,cls:'low',txt:'25%'},
+    {label:'建筑遮荫',val:5,cls:'low',txt:'5%'},
+    {label:'可种植空间',val:85,cls:'high',txt:'充足'},
+    {label:'幽灵绿化风险',val:78,cls:'low',txt:'78%'},
+    {label:'路面反射率',val:5,cls:'low',txt:'5%'},
+  ]},
+  {name:'曹杨路 · 曹杨新村',dot:'red',imgClass:'tree-poor',emoji:'🏘️🅿️☀️',label:'⚠️ 有效遮荫率 6%',labelColor:'#e74c3c',
+   scores:[
+    {label:'人行道遮荫',val:6,cls:'low',txt:'6%'},
+    {label:'树冠连续度',val:12,cls:'low',txt:'12%'},
+    {label:'树冠类型',val:30,cls:'low',txt:'少量女贞'},
+    {label:'植被健康度',val:30,cls:'mid',txt:'30%'},
+    {label:'建筑遮荫',val:10,cls:'low',txt:'10%'},
+    {label:'可种植空间',val:78,cls:'high',txt:'充足'},
+    {label:'幽灵绿化风险',val:65,cls:'low',txt:'65%'},
+    {label:'路面反射率',val:8,cls:'low',txt:'8%'},
+  ]},
+  {name:'三林路 · 三林镇',dot:'red',imgClass:'tree-poor',emoji:'🏗️🚗☀️',label:'⚠️ 有效遮荫率 3%',labelColor:'#e74c3c',
+   scores:[
+    {label:'人行道遮荫',val:3,cls:'low',txt:'3%'},
+    {label:'树冠连续度',val:5,cls:'low',txt:'5%'},
+    {label:'树冠类型',val:10,cls:'low',txt:'几乎无'},
+    {label:'植被健康度',val:15,cls:'low',txt:'15%'},
+    {label:'建筑遮荫',val:8,cls:'low',txt:'8%'},
+    {label:'可种植空间',val:92,cls:'high',txt:'极充足'},
+    {label:'幽灵绿化风险',val:15,cls:'high',txt:'15%'},
+    {label:'路面反射率',val:2,cls:'low',txt:'2%'},
+  ]},
+  {name:'华泾路 · 华泾镇',dot:'orange',imgClass:'tree-poor',emoji:'🌳🚧🏢',label:'⚠️ 有效遮荫率 8%',labelColor:'#e67e22',
+   scores:[
+    {label:'人行道遮荫',val:8,cls:'low',txt:'8%'},
+    {label:'树冠连续度',val:18,cls:'low',txt:'18%'},
+    {label:'树冠类型',val:40,cls:'mid',txt:'新植银杏'},
+    {label:'植被健康度',val:50,cls:'mid',txt:'50%'},
+    {label:'建筑遮荫',val:20,cls:'mid',txt:'20%'},
+    {label:'可种植空间',val:70,cls:'high',txt:'充足'},
+    {label:'幽灵绿化风险',val:40,cls:'mid',txt:'40%'},
+    {label:'路面反射率',val:15,cls:'mid',txt:'15%'},
+  ]},
+];
+let currentSegment=0;
+
+function selectSegment(i,btn){
+  currentSegment=i;
+  document.querySelectorAll('#tab2 .scenario-card').forEach(b=>b.classList.remove('selected'));
+  if(btn)btn.classList.add('selected');
+  const d=segmentData[i];
+  document.getElementById('seg-dot').className='sv-dot '+(d.dot==='red'?'red':d.dot==='orange'?'yellow':'green');
+  document.getElementById('seg-name').textContent=d.name;
+  document.getElementById('seg-img').className='sv-img '+d.imgClass;
+  document.getElementById('seg-img').innerHTML=`<span>${d.emoji}</span><div class="sv-label" style="color:${d.labelColor}">${d.label}</div>`;
+  const results=document.getElementById('vlm-results');
+  results.innerHTML='<div style="font-size:12px;font-weight:600;color:#ecf0f1;margin-bottom:12px">VLM 10维评估结果</div>';
+  d.scores.forEach(s=>{
+    results.innerHTML+=`<div class="score-bar"><span class="score-label">${s.label}</span><div class="score-track"><div class="score-fill ${s.cls}" style="width:${typeof s.val==='number'?s.val:50}%"></div></div><span class="score-val" style="color:${s.cls==='high'?'#2ecc71':s.cls==='mid'?'#f39c12':'#e74c3c'}">${s.txt}</span></div>`;
+  });
+}
+
+function initTab2(){
+  selectSegment(0,document.querySelector('#tab2 .scenario-card'));
+
+  charts.shadeDist=echarts.init(document.getElementById('chart-shade-dist'));
+  charts.shadeDist.setOption({
+    tooltip:{trigger:'axis'},
+    grid:{left:40,right:20,top:10,bottom:30},
+    xAxis:{data:['>75%遮荫','50-75%','25-50%','<25%','无遮荫'],axisLabel:{color:'#5a7a6a',fontSize:9},splitLine:{lineStyle:{color:'#1e2d3a'}}},
+    yAxis:{name:'采样点',axisLabel:{color:'#5a7a6a',fontSize:10},splitLine:{lineStyle:{color:'#1e2d3a'}}},
+    series:[{type:'bar',data:[{value:820,itemStyle:{color:'#27ae60'}},{value:1050,itemStyle:{color:'#2ecc71'}},{value:1300,itemStyle:{color:'#f39c12'}},{value:1100,itemStyle:{color:'#e67e22'}},{value:810,itemStyle:{color:'#e74c3c'}}],barWidth:'50%'}]
+  });
+
+  charts.ghost=echarts.init(document.getElementById('chart-ghost'));
+  charts.ghost.setOption({
+    tooltip:{trigger:'item',formatter:'{b}: {c} ({d}%)'},
+    series:[{type:'pie',radius:['40%','70%'],center:['50%','50%'],
+      data:[
+        {value:3343,name:'有效遮荫',itemStyle:{color:'#27ae60'}},
+        {value:1737,name:'幽灵绿化',itemStyle:{color:'#e74c3c'}},
+      ],
+      label:{color:'#5a7a6a',fontSize:10}
+    }]
+  });
+}
+
+// ===== TAB 3 =====
+function selectScenario(s){
+  document.querySelectorAll('#tab3 .scenario-card').forEach(c=>c.classList.remove('selected'));
+  document.getElementById('sc-'+s).classList.add('selected');
+  const details={
+    A:{points:'47 个',trees:'328棵',species:'悬铃木（梧桐）',cost:'65.6万元',canopy:'+11%',shade:'+12%',temp:'2.5°C',people:'12,400 老人'},
+    B:{points:'52 个',trees:'380棵',species:'悬铃木 + 公园混交林',cost:'158万元',canopy:'+15%',shade:'+17%',temp:'3.3°C',people:'15,800 老人'},
+    C:{points:'58 个',trees:'420棵',species:'悬铃木 + 屋顶绿化',cost:'320万元',canopy:'+18%',shade:'+20%',temp:'4.0°C',people:'22,400 老人'},
+  };
+  const d=details[s];
+  document.getElementById('scenario-detail').innerHTML=`
+    <table>
+      <tr><td style="color:#5a7a6a">种植点位</td><td class="highlight">${d.points}（VLM 验证）</td></tr>
+      <tr><td style="color:#5a7a6a">推荐树种</td><td>${d.species}</td></tr>
+      <tr><td style="color:#5a7a6a">预计成本</td><td class="highlight">${d.cost}</td></tr>
+      <tr><td style="color:#5a7a6a">5年树冠增量</td><td>树冠覆盖 ${d.canopy} · 有效遮荫 ${d.shade}</td></tr>
+      <tr><td style="color:#5a7a6a">地表温度降幅</td><td class="highlight">${d.temp}</td></tr>
+      <tr><td style="color:#5a7a6a">受益人口</td><td>${d.people}</td></tr>
+    </table>`;
+}
+
+function initTab3(){
+  charts.beforeAfter=echarts.init(document.getElementById('chart-before-after'));
+  const months=['1月','2月','3月','4月','5月','6月','7月','8月','9月','10月','11月','12月'];
+  const before=[5,7,12,19,26,32,35,34,28,20,12,7];
+  const after=[5,7,12,18,25,30,32.5,31.5,26,19,12,7];
+  charts.beforeAfter.setOption({
+    tooltip:{trigger:'axis'},
+    grid:{left:40,right:20,top:10,bottom:30},
+    xAxis:{data:months,axisLabel:{color:'#5a7a6a',fontSize:10},splitLine:{lineStyle:{color:'#1e2d3a'}}},
+    yAxis:{name:'月均最高温 °C',axisLabel:{color:'#5a7a6a',fontSize:10},splitLine:{lineStyle:{color:'#1e2d3a'}}},
+    series:[
+      {name:'当前 (2026)',type:'line',data:before,lineStyle:{color:'#e74c3c',width:2},itemStyle:{color:'#e74c3c'},symbol:'circle',symbolSize:6},
+      {name:'模拟 (2031)',type:'line',data:after,lineStyle:{color:'#27ae60',width:2},itemStyle:{color:'#27ae60'},symbol:'circle',symbolSize:6},
+    ],
+    legend:{data:['当前 (2026)','模拟 (2031)'],bottom:0,textStyle:{color:'#5a7a6a',fontSize:10}}
+  });
+
+  charts.canopyGrowth=echarts.init(document.getElementById('chart-canopy-growth'));
+  const years=['2026','2027','2028','2029','2030','2031'];
+  const canopyA=[7,9,11,13.5,15.5,18];
+  const canopyB=[7,9.5,12.5,15.5,18.5,22];
+  const canopyC=[7,10,13.5,17,21,25];
+  charts.canopyGrowth.setOption({
+    tooltip:{trigger:'axis'},
+    grid:{left:40,right:20,top:10,bottom:30},
+    xAxis:{data:years,axisLabel:{color:'#5a7a6a',fontSize:10},splitLine:{lineStyle:{color:'#1e2d3a'}}},
+    yAxis:{name:'树冠覆盖率 %',axisLabel:{color:'#5a7a6a',fontSize:10},splitLine:{lineStyle:{color:'#1e2d3a'}}},
+    series:[
+      {name:'情景A',type:'line',data:canopyA,lineStyle:{color:'#27ae60'},itemStyle:{color:'#27ae60'}},
+      {name:'情景B',type:'line',data:canopyB,lineStyle:{color:'#3498db'},itemStyle:{color:'#3498db'}},
+      {name:'情景C',type:'line',data:canopyC,lineStyle:{color:'#9b59b6'},itemStyle:{color:'#9b59b6'}},
+    ],
+    legend:{data:['情景A','情景B','情景C'],bottom:0,textStyle:{color:'#5a7a6a',fontSize:10}}
+  });
+
+  charts.benefit=echarts.init(document.getElementById('chart-benefit'));
+  charts.benefit.setOption({
+    tooltip:{trigger:'axis',axisPointer:{type:'shadow'}},
+    grid:{left:80,right:30,top:10,bottom:20},
+    xAxis:{type:'value',axisLabel:{color:'#5a7a6a',fontSize:10},splitLine:{lineStyle:{color:'#1e2d3a'}}},
+    yAxis:{type:'category',data:['65+老人','0-5岁儿童','全体居民','通勤行人'],axisLabel:{color:'#c8d6e5',fontSize:10}},
+    series:[{type:'bar',data:[12400,3200,48000,15000].map(v=>({value:v,itemStyle:{color:'#27ae60'}})),barWidth:18,label:{show:true,position:'right',color:'#c8d6e5',fontSize:10,formatter:'{c} 人'}}]
+  });
+}
+
+// ===== TAB 4 =====
+function initTab4(){
+  charts.budget=echarts.init(document.getElementById('chart-budget'));
+  const dists=['控江路','曹杨新村','中原路','三林镇','长征镇','江湾镇','彭浦镇','华泾镇','颛桥镇','大场镇'];
+  const benefits=[85,78,72,95,68,55,52,48,60,65];
+  const costs=[66,58,52,70,44,35,38,32,48,50];
+  charts.budget.setOption({
+    tooltip:{trigger:'axis',axisPointer:{type:'shadow'}},
+    legend:{data:['降温收益评分','改造成本(万元)'],bottom:0,textStyle:{color:'#5a7a6a',fontSize:10}},
+    grid:{left:80,right:60,top:10,bottom:40},
+    xAxis:{type:'category',data:dists,axisLabel:{color:'#c8d6e5',fontSize:10,rotate:30},splitLine:{lineStyle:{color:'#1e2d3a'}}},
+    yAxis:[
+      {type:'value',name:'收益评分',axisLabel:{color:'#5a7a6a',fontSize:10},splitLine:{lineStyle:{color:'#1e2d3a'}}},
+      {type:'value',name:'万元',axisLabel:{color:'#5a7a6a',fontSize:10},splitLine:{show:false}},
+    ],
+    series:[
+      {name:'降温收益评分',type:'bar',data:benefits.map(v=>({value:v,itemStyle:{color:'#27ae60'}})),barWidth:16,yAxisIndex:0},
+      {name:'改造成本(万元)',type:'bar',data:costs.map(v=>({value:v,itemStyle:{color:'#3498db'}})),barWidth:16,yAxisIndex:1},
+    ]
+  });
+}
+
+// Resize handler
+window.addEventListener('resize',()=>{
+  Object.values(charts).forEach(c=>{try{c.resize()}catch(e){}});
+});
+</script>
+</body>
+</html>
