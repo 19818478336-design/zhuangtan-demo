@@ -1010,7 +1010,8 @@ function exportPDF(level){
       '<h3>二、各区网格供需分析</h3>'+
       tbl(['区域','总桩数','平均供需比','不足','偏紧','平衡','过剩'],
         (D.supply.districtTable||[]).map(function(d){
-          return [d.district, d.totalPiles, d.avgRatio, d.shortage, d.tight, d.balanced, d.excess];
+          return [d.district, d.totalPiles||d.piles||'—', d.avgRatio||d.supplyDemand||d.ratio||'—',
+            d.shortage||'—', d.tight||'—', d.balanced||'—', d.excess||'—'];
         }))+
       '<h3>三、供给不足区域优先级</h3>'+
       tbl(['网格','区域','供需比','可修复桩','修复后供需比','建议'],
@@ -1029,22 +1030,36 @@ function exportPDF(level){
       '<h3>二、高优先级站点归因详情</h3>'+
       tbl(['站点','区域','利用率','归因标签','优先级','处置建议'],
         attrRows.map(function(r){
-          var util = typeof r.utilization==='number'?r.utilization:(parseFloat(r.daily)||0)/100;
-          return [r.station, r.district, (util*100).toFixed(0)+'%', r.tags?r.tags.join('/'):r.attribution_tag,
-            r.priority||r.repair_priority, r.action||r.suggestion];
+          var utilVal = r.utilization;
+          if (utilVal === undefined && r.daily !== undefined) {
+            // static JSON: daily = 日均充电量(kWh), avg = 历史均值(kWh)
+            utilVal = (r.daily / (r.avg || 200));
+          }
+          var utilStr = typeof utilVal === 'number' ? (utilVal * 100).toFixed(0) + '%' : (r.dev || '—');
+          var tags = r.tags ? (Array.isArray(r.tags) ? r.tags.join('/') : r.tags) : (r.attribution_tag || '—');
+          return [r.station||r.site_name, r.district, utilStr, tags,
+            r.priority||r.repair_priority||(r.level||'—'), r.action||r.suggestion||'—'];
         }))+
       '<h3>三、归因分布分析</h3>'+
       '<p>设备故障类占比最高(33.7%)，主要集中在服役超5年的老旧设备。周边竞争类(22.6%)反映新建桩缺乏区域供需统筹，部分区域出现过度建设。可达性变化(19.3%)中约半数与道路施工相关，为临时性因素，预计3-6个月恢复。</p>'+
       '<h3>四、修复进度追踪</h3>'+
       tbl(['站点','修复进度','预计完成'],
-        (D.attribution.repairProgress||[]).map(function(r){return [r.site, r.progress+'%', r.eta]}));
+        (D.attribution.repairProgress||[]).map(function(r){
+          var prog = r.progress !== undefined ? r.progress + '%' : (r.pct !== undefined ? r.pct + '% (' + r.done + '/' + r.total + ')' : '—');
+          var eta = r.eta || (r.name || '—');
+          return [r.site||r.name||'—', prog, eta];
+        }));
   } else if(level==='L4'){
     var anomRows = D.verify.anomalyTable||[];
     bodyHtml='<h3>一、核验总览</h3>'+
       '<p>Q2对<b>'+s.verify.operatorCount+'家</b>运营商申报数据进行多源交叉验证。偏离度>15%的高风险异常占比<b>'+s.verify.highDeviationRate+'%</b>，合规率<b>'+s.verify.normalRate+'%</b>。发现状态矛盾（API故障但申报充电）站点<b>'+s.verify.contradictionSites+'个</b>。</p>'+
       '<h3>二、异常申报详情</h3>'+
       tbl(['站点/区域','运营商','申报(万kWh)','基准(万kWh)','偏离度','异常类型','核查建议'],
-        anomRows.map(function(r){return [r.station, r.operator, r.reported, r.baseline, r.deviation, r.type||r.anomaly_type, r.advice||r.detail]}))+
+        anomRows.map(function(r){
+          var typ = r.type||r.anomaly_type||(r.signals&&r.signals.length?r.signals.join('/'):'—');
+          var adv = r.advice||r.detail||'—';
+          return [r.station||(r.district+'站点'), r.operator, r.reported, r.baseline, r.deviation, typ, adv];
+        }))+
       '<h3>三、交叉验证方法</h3>'+
       '<ol><li><b>时序一致性</b>：运营商申报月度充电量 vs D1平台记录趋势比对，偏离度>15%标记异常</li>'+
       '<li><b>状态一致性</b>：运营商API显示"故障"的桩却在申报数据中有充电记录，直接标记异常</li>'+
@@ -1085,7 +1100,20 @@ function exportPDF(level){
     '</body></html>';
 
   // 在新窗口中打开并自动打印
-  var w = window.open('', '_blank', 'width=900,height=700');
+  var w = window.open('about:blank', '_blank', 'width=900,height=700');
+  if (!w || w.closed) {
+    // 弹窗被浏览器拦截
+    var tip = document.getElementById('exportTip');
+    if (!tip) {
+      tip = document.createElement('div');
+      tip.id = 'exportTip';
+      tip.style.cssText = 'position:fixed;top:20px;left:50%;transform:translateX(-50%);background:#fef2f2;border:2px solid #dc2626;border-radius:10px;padding:16px 24px;z-index:9999;font-size:13px;color:#991b1b;max-width:480px;text-align:center;box-shadow:0 8px 30px rgba(0,0,0,0.15)';
+      document.body.appendChild(tip);
+    }
+    tip.innerHTML = '<b>⚠️ 弹窗被浏览器拦截</b><br><small>请点击地址栏右侧的拦截图标，选择「始终允许 popup」后重试。<br>或将 <u>about:blank</u> 加入弹窗白名单。</small><button onclick="this.parentNode.remove()" style="display:block;margin:8px auto 0;padding:4px 16px;background:#dc2626;color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:11px">关闭</button>';
+    setTimeout(function(){ if(tip.parentNode) tip.remove(); }, 8000);
+    return;
+  }
   w.document.write(reportHtml);
   w.document.close();
   // 等待渲染完成后触发打印
