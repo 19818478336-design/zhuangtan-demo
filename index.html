@@ -6,133 +6,160 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>「桩探」——上海市充电设施跨运营商运行监测与决策支持平台 v4.1</title>
+<title>桩探 — 上海市充电设施运行监测与决策支持平台</title>
 <script src="https://cdn.jsdelivr.net/npm/echarts@5.5.0/dist/echarts.min.js"></script>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-<style>
-*{margin:0;padding:0;box-sizing:border-box}
-body{font-family:'PingFang SC','Microsoft YaHei','Helvetica Neue',sans-serif;background:#f0f2f5;color:#1e293b;font-size:14px;min-height:100vh}
+	<style>
+	*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+	body{font-family:Inter,-apple-system,"PingFang SC","Microsoft YaHei",sans-serif;background:#f5f6f8;color:#101828;font-size:13px;line-height:1.5;min-height:100vh;-webkit-font-smoothing:antialiased}
 
-.topbar{background:linear-gradient(135deg,#0f172a 0%,#1e293b 100%);height:56px;display:flex;align-items:center;padding:0 28px;justify-content:space-between;position:sticky;top:0;z-index:1000;box-shadow:0 2px 12px rgba(0,0,0,0.12)}
-.topbar .brand{display:flex;align-items:center;gap:12px;font-size:16px;font-weight:700;color:#f1f5f9;letter-spacing:0.5px}
-.topbar .brand .dot{width:8px;height:8px;background:#22c55e;border-radius:50%;animation:pulse 2s infinite;box-shadow:0 0 6px rgba(34,197,94,0.5)}
-@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:0.4;transform:scale(1.8)}}
-.topbar .nav-links{display:flex;gap:2px}
-.topbar .nav-links span{cursor:pointer;padding:10px 20px;font-size:13px;color:#94a3b8;border-radius:6px;transition:all 0.2s;white-space:nowrap;font-weight:500;letter-spacing:0.3px}
-.topbar .nav-links span:hover{color:#e2e8f0;background:rgba(255,255,255,0.06)}
-.topbar .nav-links span.active{color:#fff;background:rgba(59,130,246,0.3);font-weight:600}
-.topbar .right{display:flex;align-items:center;gap:16px}
-.topbar .right .live{display:flex;align-items:center;gap:8px;font-size:12px;color:#94a3b8}
-.topbar .right .live .ts{color:#e2e8f0;font-variant-numeric:tabular-nums}
-.topbar .right .refresh-btn{cursor:pointer;display:flex;align-items:center;gap:6px;padding:6px 14px;background:rgba(59,130,246,0.2);border:1px solid rgba(59,130,246,0.35);color:#93c5fd;border-radius:6px;font-size:11px;font-weight:500;transition:all 0.2s;white-space:nowrap;letter-spacing:0.3px}
-.topbar .right .refresh-btn:hover{background:rgba(59,130,246,0.35);border-color:rgba(59,130,246,0.6);color:#bfdbfe}
-.topbar .right .refresh-btn .icon{display:inline-block;font-size:13px;transition:transform 0.6s}
-.topbar .right .refresh-btn.spinning .icon{animation:spin 0.6s ease-in-out}
-@keyframes spin{100%{transform:rotate(360deg)}}
-.topbar .right .countdown{font-size:10px;color:#64748b;min-width:48px;text-align:right}
+	/* ── Topbar ──────────────────────────────── */
+	.topbar{background:#101828;height:52px;display:flex;align-items:center;padding:0 24px;justify-content:space-between;position:sticky;top:0;z-index:1000}
+	.topbar .brand{display:flex;align-items:center;gap:10px;font-size:14px;font-weight:600;color:#f8f9fb;letter-spacing:-0.2px}
+	.topbar .brand .dot{width:6px;height:6px;background:#12b76a;border-radius:50%;flex-shrink:0}
+	@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.35}}
+	.topbar .nav-links{display:flex;gap:0}
+	.topbar .nav-links span{cursor:pointer;padding:15px 18px;font-size:12.5px;color:#98a2b3;transition:all 0.15s;white-space:nowrap;font-weight:500;letter-spacing:0.2px;border-bottom:2px solid transparent;margin-bottom:-1px}
+	.topbar .nav-links span:hover{color:#e4e7ec;background:rgba(255,255,255,0.03)}
+	.topbar .nav-links span.active{color:#fff;border-bottom-color:#0f766e;font-weight:600}
+	.topbar .right{display:flex;align-items:center;gap:14px}
+	.topbar .right .live{display:flex;align-items:center;gap:6px;font-size:11px;color:#98a2b3}
+	.topbar .right .live .ts{color:#e4e7ec;font-variant-numeric:tabular-nums;font-size:12px}
+	.topbar .right .countdown{font-size:10px;color:#667085;min-width:42px;text-align:right}
+	.topbar .right .refresh-btn{cursor:pointer;display:flex;align-items:center;gap:5px;padding:5px 12px;background:rgba(15,118,110,0.12);border:1px solid rgba(15,118,110,0.25);color:#5ee6d4;border-radius:5px;font-size:11px;font-weight:500;transition:all 0.15s;white-space:nowrap}
+	.topbar .right .refresh-btn:hover{background:rgba(15,118,110,0.22);border-color:rgba(15,118,110,0.45);color:#99f6e4}
+	@keyframes spin{100%{transform:rotate(360deg)}}
+	.topbar .right .refresh-btn .icon{display:inline-block;font-size:12px;transition:transform 0.6s}
+	.topbar .right .refresh-btn.spinning .icon{animation:spin 0.6s ease-in-out}
 
-.main{padding:24px 28px;max-width:1560px;margin:0 auto}
-.tab-content{display:none}
-.tab-content.active{display:block}
+	/* ── Layout ────────────────────────────────── */
+	.main{padding:22px 24px;max-width:1520px;margin:0 auto}
+	.tab-content{display:none}
+	.tab-content.active{display:block}
 
-.stat-row{display:grid;grid-template-columns:repeat(6,1fr);gap:14px;margin-bottom:20px}
-.stat-card{background:#fff;border-radius:10px;padding:18px 16px;border:1px solid #e2e8f0;text-align:center;transition:all 0.2s;box-shadow:0 1px 2px rgba(0,0,0,0.03)}
-.stat-card:hover{box-shadow:0 4px 16px rgba(0,0,0,0.06);transform:translateY(-1px)}
-.stat-card .val{font-size:30px;font-weight:700;line-height:1.1;letter-spacing:-0.5px}
-.stat-card .lbl{font-size:11px;color:#64748b;margin-top:6px;letter-spacing:0.5px;font-weight:500}
-.stat-card .chg{font-size:10px;margin-top:4px;letter-spacing:0.2px}
-.chg-up{color:#059669}.chg-down{color:#dc2626}.chg-warn{color:#d97706}
+	/* ── Stat Row ──────────────────────────────── */
+	.stat-row{display:grid;grid-template-columns:repeat(6,1fr);gap:12px;margin-bottom:18px}
+	.stat-card{background:#fff;border-radius:8px;padding:16px 18px;border:1px solid #eaecf0;transition:box-shadow 0.15s}
+	.stat-card:hover{box-shadow:0 2px 8px rgba(16,24,40,0.06)}
+	.stat-card .val{font-size:26px;font-weight:700;line-height:1.15;color:#101828;letter-spacing:-0.3px;margin-bottom:2px}
+	.stat-card .val .unit{font-size:12px;font-weight:500;color:#98a2b3;margin-left:2px}
+	.stat-card .lbl{font-size:11px;color:#667085;letter-spacing:0.1px;font-weight:500}
+	.stat-card .sub{font-size:10px;color:#98a2b3;margin-top:3px}
+	.stat-card.accent-red{border-left:3px solid #d92d20}
+	.stat-card.accent-amber{border-left:3px solid #dc6803}
+	.stat-card.accent-green{border-left:3px solid #079455}
+	.stat-card.accent-teal{border-left:3px solid #0f766e}
+	.stat-card.accent-slate{border-left:3px solid #667085}
 
-.grid{display:grid;gap:18px;margin-bottom:18px}
-.grid-2{grid-template-columns:1fr 1fr}
-.grid-3{grid-template-columns:1fr 1fr 1fr}
-.grid-2r{grid-template-columns:2fr 1fr}
-.grid-2l{grid-template-columns:1fr 2fr}
+	/* ── Grid & Card ────────────────────────────── */
+	.grid{display:grid;gap:16px;margin-bottom:16px}
+	.grid-2{grid-template-columns:1fr 1fr}
+	.grid-3{grid-template-columns:1fr 1fr 1fr}
+	.grid-2r{grid-template-columns:2fr 1fr}
+	.grid-2l{grid-template-columns:1fr 2fr}
 
-.card{background:#fff;border-radius:10px;border:1px solid #e2e8f0;overflow:hidden;box-shadow:0 1px 2px rgba(0,0,0,0.03)}
-.card-hd{padding:14px 20px;border-bottom:1px solid #f1f5f9;display:flex;justify-content:space-between;align-items:center;font-size:13px;font-weight:600;color:#0f172a;letter-spacing:0.3px}
-.card-bd{padding:16px;overflow-x:auto}
-.card-bd0{padding:0;overflow-x:auto}
+	.card{background:#fff;border-radius:8px;border:1px solid #eaecf0;overflow:hidden;box-shadow:0 1px 3px rgba(16,24,40,0.04)}
+	.card-hd{padding:13px 18px;border-bottom:1px solid #f2f4f7;display:flex;justify-content:space-between;align-items:center;font-size:12.5px;font-weight:600;color:#101828;letter-spacing:0.1px}
+	.card-bd{padding:14px;overflow-x:auto}
+	.card-bd0{padding:0;overflow-x:auto}
 
-.chart{width:100%;overflow:hidden}
-.chart.h420{height:420px}.chart.h360{height:360px}.chart.h300{height:300px}.chart.h260{height:260px}.chart.h220{height:220px}
+	/* ── Charts ─────────────────────────────────── */
+	.chart{width:100%;overflow:hidden}
+	.chart.h420{height:420px}.chart.h360{height:360px}.chart.h300{height:300px}.chart.h260{height:260px}.chart.h220{height:220px}
 
-.tbl{width:100%;min-width:500px;border-collapse:collapse;font-size:12px}
-.tbl th{background:#f8fafc;color:#475569;font-weight:600;padding:10px 14px;border-bottom:2px solid #e2e8f0;text-align:left;font-size:11px;letter-spacing:0.5px;text-transform:uppercase}
-.tbl td{padding:9px 14px;border-bottom:1px solid #f1f5f9;color:#334155;vertical-align:top}
-.tbl tr:hover td{background:#f8fafc}
-.tbl .num{text-align:right;font-variant-numeric:tabular-nums;font-family:'SF Mono','Consolas','Menlo',monospace;font-size:12px}
+	/* ── Tables ─────────────────────────────────── */
+	.tbl{width:100%;min-width:500px;border-collapse:collapse;font-size:12px}
+	.tbl th{background:#f9fafb;color:#667085;font-weight:600;padding:9px 12px;border-bottom:1px solid #eaecf0;text-align:left;font-size:10.5px;letter-spacing:0.3px;text-transform:uppercase}
+	.tbl td{padding:8px 12px;border-bottom:1px solid #f2f4f7;color:#344054;vertical-align:top;font-size:12px}
+	.tbl tbody tr:hover td{background:#f9fafb}
+	.tbl .num{text-align:right;font-variant-numeric:tabular-nums;font-family:"SF Mono","JetBrains Mono","Consolas",monospace;font-size:11.5px}
 
-.badge{display:inline-block;padding:2px 8px;border-radius:10px;font-size:10px;font-weight:600;white-space:nowrap;letter-spacing:0.2px}
-.badge-r{background:#fef2f2;color:#dc2626}.badge-o{background:#fffbeb;color:#d97706}
-.badge-g{background:#f0fdf4;color:#059669}.badge-b{background:#eff6ff;color:#2563eb}
-.badge-p{background:#f5f3ff;color:#7c3aed}
+	/* ── Badges ─────────────────────────────────── */
+	.badge{display:inline-block;padding:2px 8px;border-radius:5px;font-size:10px;font-weight:600;white-space:nowrap;letter-spacing:0.1px}
+	.badge-r{background:#fef3f2;color:#b42318}
+	.badge-o{background:#fffaeb;color:#b54708}
+	.badge-g{background:#ecfdf3;color:#067647}
+	.badge-b{background:#f0fdfa;color:#0f766e}
+	.badge-p{background:#f8f9fc;color:#475569}
 
-#map,#map2{width:100%;height:460px;border-radius:4px}
-.legend-inline{display:flex;gap:20px;font-size:11px;color:#64748b;padding:10px 16px;flex-wrap:wrap;align-items:center}
-.legend-inline .dot{width:10px;height:10px;border-radius:50%;display:inline-block;margin-right:5px;vertical-align:middle}
+	/* ── Maps ───────────────────────────────────── */
+	#map,#map2{width:100%;height:460px;border-radius:4px}
+	.legend-inline{display:flex;gap:18px;font-size:10.5px;color:#667085;padding:8px 16px;flex-wrap:wrap;align-items:center}
+	.legend-inline .dot{width:9px;height:9px;border-radius:50%;display:inline-block;margin-right:4px;vertical-align:middle}
 
-.rpt-section{margin-bottom:28px}
-.rpt-section h3{font-size:15px;font-weight:700;color:#0f172a;margin-bottom:14px;padding-bottom:10px;border-bottom:2px solid #e2e8f0;display:flex;align-items:center;gap:10px;letter-spacing:0.3px}
-.rpt-section h3 .num{display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;border-radius:50%;background:#2563eb;color:#fff;font-size:12px;font-weight:700}
-.rpt-card{background:#fafbfc;border:1px solid #e2e8f0;border-radius:10px;padding:22px;margin-bottom:14px;transition:box-shadow 0.2s}
-.rpt-card:hover{box-shadow:0 2px 8px rgba(0,0,0,0.04)}
-.rpt-card h4{font-size:13px;font-weight:600;color:#0f172a;margin-bottom:12px;letter-spacing:0.3px}
-.rpt-card p{font-size:12px;color:#475569;line-height:1.9}
-.rpt-num{font-size:24px;font-weight:700;color:#2563eb}
-.rpt-insight{background:#eff6ff;border-left:3px solid #2563eb;padding:12px 16px;margin:12px 0;font-size:12px;color:#1e40af;border-radius:0 8px 8px 0;line-height:1.8}
-.rpt-warn{background:#fef2f2;border-left:3px solid #dc2626;padding:12px 16px;margin:12px 0;font-size:12px;color:#991b1b;border-radius:0 8px 8px 0;line-height:1.8}
+	/* ── Report Sections ────────────────────────── */
+	.rpt-section{margin-bottom:26px}
+	.rpt-section h3{font-size:14px;font-weight:700;color:#101828;margin-bottom:12px;padding-bottom:8px;border-bottom:1px solid #eaecf0;display:flex;align-items:center;gap:9px;letter-spacing:-0.1px}
+	.rpt-section h3 .num{display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;border-radius:6px;background:#0f766e;color:#fff;font-size:11px;font-weight:700;flex-shrink:0}
+	.rpt-card{background:#fafbfc;border:1px solid #eaecf0;border-radius:8px;padding:20px;margin-bottom:12px;transition:box-shadow 0.15s}
+	.rpt-card:hover{box-shadow:0 1px 4px rgba(16,24,40,0.04)}
+	.rpt-card h4{font-size:12.5px;font-weight:600;color:#101828;margin-bottom:10px}
+	.rpt-card p{font-size:12px;color:#475569;line-height:1.85}
+	.rpt-insight{background:#f0fdfa;border-left:3px solid #0f766e;padding:12px 16px;margin:12px 0;font-size:12px;color:#134e4a;border-radius:0 6px 6px 0;line-height:1.8}
+	.rpt-warn{background:#fef3f2;border-left:3px solid #d92d20;padding:12px 16px;margin:12px 0;font-size:12px;color:#7a271a;border-radius:0 6px 6px 0;line-height:1.8}
 
-.export-panel{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:20px}
-.export-card{background:#fff;border:2px solid #e2e8f0;border-radius:12px;padding:22px;text-align:center;cursor:pointer;transition:all 0.25s}
-.export-card:hover{border-color:#2563eb;box-shadow:0 6px 20px rgba(37,99,235,0.1);transform:translateY(-2px)}
-.export-card .icon{font-size:30px;margin-bottom:10px}
-.export-card .title{font-size:13px;font-weight:600;color:#0f172a;margin-bottom:6px;letter-spacing:0.3px}
-.export-card .desc{font-size:11px;color:#94a3b8;line-height:1.6}
-.export-card .export-badge{display:inline-block;margin-top:8px;padding:4px 12px;background:#2563eb;color:#fff;border-radius:12px;font-size:10px;font-weight:600;letter-spacing:0.3px}
+	/* ── Export Cards ───────────────────────────── */
+	.export-panel{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px}
+	.export-card{background:#fff;border:1px solid #eaecf0;border-radius:8px;padding:20px;cursor:pointer;transition:all 0.2s;position:relative;overflow:hidden}
+	.export-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:#0f766e;opacity:0;transition:opacity 0.2s}
+	.export-card:hover{border-color:#0f766e;box-shadow:0 4px 16px rgba(15,118,110,0.08);transform:translateY(-1px)}
+	.export-card:hover::before{opacity:1}
+	.export-card .ec-level{font-size:10px;font-weight:700;color:#0f766e;letter-spacing:0.8px;text-transform:uppercase;margin-bottom:8px}
+	.export-card .ec-title{font-size:13px;font-weight:600;color:#101828;margin-bottom:4px;letter-spacing:-0.1px}
+	.export-card .ec-desc{font-size:11px;color:#98a2b3;line-height:1.5;margin-bottom:10px}
+	.export-card .ec-action{display:inline-flex;align-items:center;gap:4px;font-size:10.5px;font-weight:600;color:#0f766e;letter-spacing:0.2px}
+	.export-card .ec-action .arr{transition:transform 0.2s}
+	.export-card:hover .ec-action .arr{transform:translateX(3px)}
 
-::-webkit-scrollbar{width:6px}
-::-webkit-scrollbar-track{background:#f1f5f9}
-::-webkit-scrollbar-thumb{background:#cbd5e1;border-radius:3px}
+	/* ── Misc ───────────────────────────────────── */
+	::-webkit-scrollbar{width:5px}
+	::-webkit-scrollbar-track{background:transparent}
+	::-webkit-scrollbar-thumb{background:#d0d5dd;border-radius:3px}
 
-.filter-bar{display:flex;gap:10px;align-items:center;font-size:12px;flex-wrap:wrap}
-.filter-bar select,.filter-bar input{border:1px solid #d1d5db;border-radius:6px;padding:6px 12px;font-size:12px;color:#334155;background:#fff;transition:border-color 0.2s}
-.filter-bar select:focus,.filter-bar input:focus{outline:none;border-color:#2563eb;box-shadow:0 0 0 3px rgba(37,99,235,0.1)}
+	.filter-bar{display:flex;gap:8px;align-items:center;font-size:11px;flex-wrap:wrap}
+	.filter-bar select,.filter-bar input{border:1px solid #d0d5dd;border-radius:5px;padding:5px 10px;font-size:11px;color:#344054;background:#fff;transition:border-color 0.15s}
+	.filter-bar select:focus,.filter-bar input:focus{outline:none;border-color:#0f766e;box-shadow:0 0 0 3px rgba(15,118,110,0.08)}
 
-.footbar{background:#fff;border-top:1px solid #e2e8f0;padding:12px 28px;font-size:11px;color:#94a3b8;display:flex;justify-content:space-between;letter-spacing:0.2px}
+	.footbar{background:#fff;border-top:1px solid #eaecf0;padding:10px 24px;font-size:10.5px;color:#98a2b3;display:flex;justify-content:space-between;letter-spacing:0.1px}
 
-.tag-row{display:flex;gap:6px;flex-wrap:wrap}
-.tag{display:inline-block;padding:3px 9px;border-radius:4px;font-size:10px;font-weight:600;white-space:nowrap;letter-spacing:0.2px}
-.tag-comp{background:#fef2f2;color:#dc2626}.tag-access{background:#fffbeb;color:#d97706}
-.tag-biz{background:#f5f3ff;color:#7c3aed}.tag-price{background:#f0fdf4;color:#059669}
-.tag-fault{background:#fff1f2;color:#e11d48}
+	.tag-row{display:flex;gap:5px;flex-wrap:wrap}
+	.tag{display:inline-block;padding:2px 8px;border-radius:4px;font-size:10px;font-weight:600;white-space:nowrap;letter-spacing:0.1px}
+	.tag-fault{background:#fef3f2;color:#b42318}.tag-comp{background:#fef3f2;color:#d92d20}
+	.tag-access{background:#fffaeb;color:#b54708}.tag-biz{background:#f8f9fc;color:#475569}
+	.tag-price{background:#ecfdf3;color:#067647}
 
-.bar-wrap{background:#f1f5f9;border-radius:6px;height:8px;overflow:hidden;margin-top:6px}
-.bar-fill{border-radius:6px;height:100%;transition:width 0.6s ease}
+	.bar-wrap{background:#f2f4f7;border-radius:4px;height:6px;overflow:hidden;margin-top:5px}
+	.bar-fill{border-radius:4px;height:100%;transition:width 0.6s ease}
 
-.refresh-toast{position:fixed;top:70px;left:50%;transform:translateX(-50%);background:#0f172a;color:#fff;padding:8px 20px;border-radius:20px;font-size:12px;z-index:9999;opacity:0;transition:opacity 0.3s;pointer-events:none;letter-spacing:0.3px}
-.refresh-toast.show{opacity:1}
+	.refresh-toast{position:fixed;top:64px;left:50%;transform:translateX(-50%);background:#101828;color:#fff;padding:8px 20px;border-radius:6px;font-size:11px;z-index:9999;opacity:0;transition:opacity 0.3s;pointer-events:none;letter-spacing:0.1px}
+	.refresh-toast.show{opacity:1}
 
-.progress-card{display:flex;align-items:center;gap:14px;padding:12px 0;border-bottom:1px solid #f1f5f9}
-.progress-card:last-child{border-bottom:none}
-.progress-card .p-info{flex:1;min-width:0}
-.progress-card .p-name{font-size:12px;font-weight:600;color:#334155;margin-bottom:4px}
-.progress-card .p-meta{font-size:10px;color:#94a3b8}
-.progress-card .p-val{font-size:14px;font-weight:700;text-align:right;white-space:nowrap}
+	.progress-card{display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid #f2f4f7}
+	.progress-card:last-child{border-bottom:none}
+	.progress-card .p-info{flex:1;min-width:0}
+	.progress-card .p-name{font-size:11.5px;font-weight:600;color:#344054;margin-bottom:3px}
+	.progress-card .p-meta{font-size:10px;color:#98a2b3}
+	.progress-card .p-val{font-size:13px;font-weight:700;text-align:right;white-space:nowrap}
 
-@media(max-width:1200px){
-  .stat-row{grid-template-columns:repeat(3,1fr)}
-  .grid-2,.grid-2r,.grid-2l{grid-template-columns:1fr}
-  .grid-3{grid-template-columns:1fr 1fr}
-  .export-panel{grid-template-columns:repeat(2,1fr)}
-}
-</style>
+	@media(max-width:1200px){
+	  .stat-row{grid-template-columns:repeat(3,1fr)}
+	  .grid-2,.grid-2r,.grid-2l{grid-template-columns:1fr}
+	  .grid-3{grid-template-columns:1fr 1fr}
+	  .export-panel{grid-template-columns:repeat(2,1fr)}
+	}
+	@media(max-width:768px){
+	  .stat-row{grid-template-columns:repeat(2,1fr)}
+	  .grid-3{grid-template-columns:1fr}
+	  .export-panel{grid-template-columns:1fr}
+	  .topbar .nav-links span{padding:15px 12px;font-size:11px}
+	}
+	</style>
 </head>
 <body>
 
 <div class="topbar">
-  <div class="brand"><span class="dot"></span>桩探 · 上海市充电设施跨运营商监测与决策支持平台</div>
+  <div class="brand"><span class="dot"></span>桩探 上海市充电设施运行监测与决策支持平台</div>
   <div class="nav-links" id="navLinks">
     <span class="active" data-tab="supply">供需全景</span>
     <span data-tab="attribution">低效归因</span>
@@ -163,10 +190,10 @@ body{font-family:'PingFang SC','Microsoft YaHei','Helvetica Neue',sans-serif;bac
     <div class="card-hd"><span>上海市 1km×1km 网格充电供需热力图</span><span class="badge badge-b">跨运营商数据融合</span></div>
     <div class="card-bd0"><div id="map"></div>
       <div class="legend-inline">
-        <span><span class="dot" style="background:#dc2626"></span>供给严重不足（＜0.5）</span>
-        <span><span class="dot" style="background:#d97706"></span>供给偏紧（0.5–0.8）</span>
-        <span><span class="dot" style="background:#059669"></span>供需平衡（0.8–1.2）</span>
-        <span><span class="dot" style="background:#2563eb"></span>供给过剩（＞1.2）</span>
+        <span><span class="dot" style="background:#d92d20"></span>供给严重不足（＜0.5）</span>
+        <span><span class="dot" style="background:#dc6803"></span>供给偏紧（0.5–0.8）</span>
+        <span><span class="dot" style="background:#079455"></span>供需平衡（0.8–1.2）</span>
+        <span><span class="dot" style="background:#0f766e"></span>供给过剩（＞1.2）</span>
         <span style="margin-left:auto;color:#94a3b8;font-size:10px">数据来源：市级充电量平台 · 地图POI · 运营商公开API</span>
       </div>
     </div>
@@ -199,11 +226,11 @@ body{font-family:'PingFang SC','Microsoft YaHei','Helvetica Neue',sans-serif;bac
     <div class="card-hd"><span>低效桩地理分布——按归因类型着色</span></div>
     <div class="card-bd0"><div id="map2"></div>
       <div class="legend-inline">
-        <span><span class="dot" style="background:#e11d48"></span>设备故障</span>
-        <span><span class="dot" style="background:#dc2626"></span>周边竞争</span>
-        <span><span class="dot" style="background:#d97706"></span>可达性下降</span>
-        <span><span class="dot" style="background:#7c3aed"></span>业态变化</span>
-        <span><span class="dot" style="background:#059669"></span>价格因素</span>
+        <span><span class="dot" style="background:#d92d20"></span>设备故障</span>
+        <span><span class="dot" style="background:#d92d20"></span>周边竞争</span>
+        <span><span class="dot" style="background:#dc6803"></span>可达性下降</span>
+        <span><span class="dot" style="background:#667085"></span>业态变化</span>
+        <span><span class="dot" style="background:#079455"></span>价格因素</span>
         <span style="margin-left:auto;color:#94a3b8;font-size:10px">基于D1-D5多源数据交叉归因</span>
       </div>
     </div>
@@ -231,7 +258,7 @@ body{font-family:'PingFang SC','Microsoft YaHei','Helvetica Neue',sans-serif;bac
   <div class="card-bd" style="font-size:12px;line-height:2.2;color:#475569">
     <p>平台在识别供给不足区域后，自动执行"先检视存量、再建议增量"的评估流程：</p>
     <p style="margin-left:16px;margin-top:6px"><b>第一步</b> —— 该区域是否存在低效桩？若有，进入归因分析；若无，直接启动新建选址评估。</p>
-    <p style="margin-left:16px"><b>第二步</b> —— 归因分类：<span style="color:#e11d48">设备故障类</span>属于可修复问题，督促运营商限期整改；<span style="color:#7c3aed">选址问题类</span>（周边竞争、可达性、业态、价格）需综合研判。</p>
+    <p style="margin-left:16px"><b>第二步</b> —— 归因分类：<span style="color:#d92d20">设备故障类</span>属于可修复问题，督促运营商限期整改；<span style="color:#667085">选址问题类</span>（周边竞争、可达性、业态、价格）需综合研判。</p>
     <p style="margin-left:16px"><b>第三步</b> —— 测算修复后的供给改善幅度。若修复后供需比可恢复至0.6以上，优先推进存量修复；若修复后仍不足0.6或低效桩均为选址问题，触发新建选址推荐。</p>
     <p style="margin-top:10px;color:#64748b;font-size:11px">该流程嵌入平台自动执行，旨在减少"一边建新桩、一边老桩闲置"的公共资源错配。</p>
   </div>
@@ -282,28 +309,28 @@ body{font-family:'PingFang SC','Microsoft YaHei','Helvetica Neue',sans-serif;bac
 
 <div class="export-panel">
   <div class="export-card" onclick="exportPDF('L1')">
-    <div class="icon">📊</div>
-    <div class="title">L1 · 运行状态总览</div>
-    <div class="desc">全市充电设施季度总览<br>3–5 页 · PDF · 每季度</div>
-    <div class="export-badge">点击导出 PDF</div>
+    <div class="ec-level">Report L1</div>
+    <div class="ec-title">运行状态总览</div>
+    <div class="ec-desc">全市充电设施季度总览 · 3–5 页 · 每季度</div>
+    <div class="ec-action">导出 PDF <span class="arr">→</span></div>
   </div>
   <div class="export-card" onclick="exportPDF('L2')">
-    <div class="icon">🗺️</div>
-    <div class="title">L2 · 区域供需分析</div>
-    <div class="desc">各区/网格供需热力详析<br>8–12 页 · PDF · 每季度</div>
-    <div class="export-badge">点击导出 PDF</div>
+    <div class="ec-level">Report L2</div>
+    <div class="ec-title">区域供需分析</div>
+    <div class="ec-desc">各区/网格供需热力详析 · 8–12 页 · 每季度</div>
+    <div class="ec-action">导出 PDF <span class="arr">→</span></div>
   </div>
   <div class="export-card" onclick="exportPDF('L3')">
-    <div class="icon">🔍</div>
-    <div class="title">L3 · 低效站点归因</div>
-    <div class="desc">站点级归因 + 处置建议<br>按需生成 · PDF+XLSX · 每月</div>
-    <div class="export-badge">点击导出 PDF</div>
+    <div class="ec-level">Report L3</div>
+    <div class="ec-title">低效站点归因</div>
+    <div class="ec-desc">站点级归因 + 处置建议 · 按需生成 · 每月</div>
+    <div class="ec-action">导出 PDF <span class="arr">→</span></div>
   </div>
   <div class="export-card" onclick="exportPDF('L4')">
-    <div class="icon">🛡️</div>
-    <div class="title">L4 · 补贴核验报告</div>
-    <div class="desc">运营商申报偏离度量化<br>5–8 页 · PDF · 每季度</div>
-    <div class="export-badge">点击导出 PDF</div>
+    <div class="ec-level">Report L4</div>
+    <div class="ec-title">补贴核验报告</div>
+    <div class="ec-desc">运营商申报偏离度量化 · 5–8 页 · 每季度</div>
+    <div class="ec-action">导出 PDF <span class="arr">→</span></div>
   </div>
 </div>
 
@@ -366,8 +393,8 @@ body{font-family:'PingFang SC','Microsoft YaHei','Helvetica Neue',sans-serif;bac
 </div><!-- /main -->
 
 <div class="footbar">
-  <span>「桩探」v4.1 · 上海市充电设施跨运营商运行监测与决策支持平台</span>
-  <span>数据来源：市级平台 · 运营商公开API · 地图开放平台 · 12345 · 公开评论 | 不含任何个人隐私数据</span>
+  <span>桩探 · 上海市充电设施运行监测与决策支持平台</span>
+  <span>数据来源：市级平台 · 运营商公开API · 地图开放平台 · 12345热线 · 公开评论  |  不含个人隐私数据</span>
 </div>
 
 <script>
@@ -378,7 +405,7 @@ var D = null, allCharts=[], map1=null, map2=null;
 var API_BASE = 'http://localhost:8765';
 var API_MODE = false;
 var REFRESH_INTERVAL = 30, countdown = REFRESH_INTERVAL, lastUpdateTime = new Date();
-var C = {blue:'#2563eb',red:'#dc2626',orange:'#d97706',green:'#059669',purple:'#7c3aed',gray:'#94a3b8',dark:'#0f172a'};
+var C = {teal:'#0f766e',red:'#d92d20',amber:'#dc6803',green:'#079455',slate:'#667085',gray:'#98a2b3',dark:'#101828'};
 
 // =============================================================
 // 加载数据 (API优先，静态回退)
@@ -597,7 +624,7 @@ loadData().then(function(data){D=data; initAll(); updateAPIStatus()})
 function updateAPIStatus(){
   var dot = document.querySelector('.brand .dot');
   if(API_MODE){
-    dot.style.background = '#22c55e';
+    dot.style.background = '#12b76a';
     dot.title = 'API模式 · 实时数据';
   } else {
     dot.style.background = '#f59e0b';
@@ -682,39 +709,39 @@ function initTabs(){
 function initStats(){
   var s=D.stats.supply;
   document.getElementById('statSupply').innerHTML =
-    '<div class="stat-card"><div class="val" style="color:#2563eb;">'+(s.totalPiles/10000).toFixed(1)+'<span style="font-size:16px">万</span></div><div class="lbl">监测充电桩总数</div><div class="chg chg-up">覆盖全市12家运营商</div></div>'+
-    '<div class="stat-card"><div class="val" style="color:#dc2626;">'+s.shortageGrids+'<span style="font-size:16px">个</span></div><div class="lbl">供给不足网格</div><div class="chg chg-down">供需比＜0.5，需重点关注</div></div>'+
-    '<div class="stat-card"><div class="val" style="color:#d97706;">'+s.tightGrids+'<span style="font-size:16px">个</span></div><div class="lbl">供给偏紧网格</div><div class="chg chg-warn">供需比 0.5–0.8</div></div>'+
-    '<div class="stat-card"><div class="val" style="color:#059669;">'+s.vehiclePileRatio+'</div><div class="lbl">全市车桩比</div><div class="chg chg-up">全国领先水平</div></div>'+
-    '<div class="stat-card"><div class="val" style="color:#2563eb;">'+s.utilizationRate+'<span style="font-size:16px">%</span></div><div class="lbl">整体利用率</div><div class="chg chg-up">较上季度 +2.3%</div></div>'+
-    '<div class="stat-card"><div class="val" style="color:#7c3aed;">'+s.excessGrids+'<span style="font-size:16px">个</span></div><div class="lbl">供给过剩网格</div><div class="chg" style="color:#64748b">供需比＞1.2，建议控制新建</div></div>';
+    '<div class="stat-card accent-teal"><div class="val">'+(s.totalPiles/10000).toFixed(1)+'<span class="unit"> 万</span></div><div class="lbl">监测充电桩总数</div><div class="sub">覆盖全市12家运营商</div></div>'+
+    '<div class="stat-card accent-red"><div class="val">'+s.shortageGrids+'<span class="unit"> 个</span></div><div class="lbl">供给不足网格</div><div class="sub">供需比 ＜0.5，需重点关注</div></div>'+
+    '<div class="stat-card accent-amber"><div class="val">'+s.tightGrids+'<span class="unit"> 个</span></div><div class="lbl">供给偏紧网格</div><div class="sub">供需比 0.5–0.8</div></div>'+
+    '<div class="stat-card accent-green"><div class="val">'+s.vehiclePileRatio+'</div><div class="lbl">全市车桩比</div><div class="sub">全国领先水平</div></div>'+
+    '<div class="stat-card accent-teal"><div class="val">'+s.utilizationRate+'<span class="unit">%</span></div><div class="lbl">整体利用率</div><div class="sub">较上季度 +2.3%</div></div>'+
+    '<div class="stat-card accent-slate"><div class="val">'+s.excessGrids+'<span class="unit"> 个</span></div><div class="lbl">供给过剩网格</div><div class="sub">供需比 ＞1.2，建议控制新建</div></div>';
 
   var a=D.stats.attribution;
   document.getElementById('statAttr').innerHTML =
-    '<div class="stat-card"><div class="val" style="color:#dc2626;">'+a.totalLowEfficiency.toLocaleString()+'<span style="font-size:16px">个</span></div><div class="lbl">识别低效桩</div><div class="chg chg-down">占总量 8.0%</div></div>'+
-    '<div class="stat-card"><div class="val" style="color:#e11d48;">'+a.faultCount+'</div><div class="lbl">设备故障</div><div class="lbl" style="color:#94a3b8">已通知运营商修复</div></div>'+
-    '<div class="stat-card"><div class="val" style="color:#dc2626;">'+a.competeCount+'</div><div class="lbl">周边竞争</div><div class="lbl" style="color:#94a3b8">竞品冲击致分流</div></div>'+
-    '<div class="stat-card"><div class="val" style="color:#d97706;">'+a.accessCount+'</div><div class="lbl">可达性下降</div><div class="lbl" style="color:#94a3b8">道路/出入口变化</div></div>'+
-    '<div class="stat-card"><div class="val" style="color:#7c3aed;">'+a.bizCount+'</div><div class="lbl">业态变化</div><div class="lbl" style="color:#94a3b8">周边商业/人口减少</div></div>'+
-    '<div class="stat-card"><div class="val" style="color:#059669;">'+a.priceCount+'</div><div class="lbl">价格因素</div><div class="lbl" style="color:#94a3b8">收费高于周边均价</div></div>';
+    '<div class="stat-card accent-red"><div class="val">'+a.totalLowEfficiency.toLocaleString()+'<span class="unit"> 个</span></div><div class="lbl">识别低效桩</div><div class="sub">占总量 8.0%</div></div>'+
+    '<div class="stat-card accent-red"><div class="val">'+a.faultCount+'</div><div class="lbl">设备故障</div><div class="sub">已通知运营商修复</div></div>'+
+    '<div class="stat-card accent-red"><div class="val">'+a.competeCount+'</div><div class="lbl">周边竞争</div><div class="sub">竞品冲击致分流</div></div>'+
+    '<div class="stat-card accent-amber"><div class="val">'+a.accessCount+'</div><div class="lbl">可达性下降</div><div class="sub">道路/出入口变化</div></div>'+
+    '<div class="stat-card accent-slate"><div class="val">'+a.bizCount+'</div><div class="lbl">业态变化</div><div class="sub">周边商业/人口减少</div></div>'+
+    '<div class="stat-card accent-green"><div class="val">'+a.priceCount+'</div><div class="lbl">价格因素</div><div class="sub">收费高于周边均价</div></div>';
 
   var v=D.stats.verify;
   document.getElementById('statVerify').innerHTML =
-    '<div class="stat-card"><div class="val" style="color:#2563eb;">'+v.operatorCount+'<span style="font-size:16px">家</span></div><div class="lbl">接入运营商</div><div class="chg chg-up">市级平台全覆盖</div></div>'+
-    '<div class="stat-card"><div class="val" style="color:#dc2626;">'+v.highDeviationRate+'<span style="font-size:16px">%</span></div><div class="lbl">申报偏离度＞15%的站点</div><div class="chg chg-down">共1,924个站点</div></div>'+
-    '<div class="stat-card"><div class="val" style="color:#d97706;">'+v.midDeviationRate+'<span style="font-size:16px">%</span></div><div class="lbl">申报偏离度10%–15%的站点</div><div class="chg chg-warn">共716个站点</div></div>'+
-    '<div class="stat-card"><div class="val" style="color:#059669;">'+v.normalRate+'<span style="font-size:16px">%</span></div><div class="lbl">申报与基准一致</div><div class="chg chg-up">共20,460个站点</div></div>'+
-    '<div class="stat-card"><div class="val" style="color:#dc2626;">'+v.contradictionSites+'<span style="font-size:16px">个</span></div><div class="lbl">状态矛盾站点</div><div class="chg chg-down">API显示故障但有充电记录</div></div>'+
-    '<div class="stat-card"><div class="val" style="color:#2563eb;">'+v.reportCycle+'</div><div class="lbl">核验报告周期</div><div class="lbl" style="color:#64748b">自动生成并推送</div></div>';
+    '<div class="stat-card accent-teal"><div class="val">'+v.operatorCount+'<span class="unit"> 家</span></div><div class="lbl">接入运营商</div><div class="sub">市级平台全覆盖</div></div>'+
+    '<div class="stat-card accent-red"><div class="val">'+v.highDeviationRate+'<span class="unit">%</span></div><div class="lbl">申报偏离度 ＞15%</div><div class="sub">共1,924个站点</div></div>'+
+    '<div class="stat-card accent-amber"><div class="val">'+v.midDeviationRate+'<span class="unit">%</span></div><div class="lbl">申报偏离度 10%–15%</div><div class="sub">共716个站点</div></div>'+
+    '<div class="stat-card accent-green"><div class="val">'+v.normalRate+'<span class="unit">%</span></div><div class="lbl">申报与基准一致</div><div class="sub">共20,460个站点</div></div>'+
+    '<div class="stat-card accent-red"><div class="val">'+v.contradictionSites+'<span class="unit"> 个</span></div><div class="lbl">状态矛盾站点</div><div class="sub">API显示故障但有充电记录</div></div>'+
+    '<div class="stat-card accent-teal"><div class="val">'+v.reportCycle+'</div><div class="lbl">核验报告周期</div><div class="sub">自动生成并推送</div></div>';
 
   var r=D.report.q2Summary;
   document.getElementById('statReport').innerHTML =
-    '<div class="stat-card"><div class="val" style="color:#2563eb;">'+r.totalKwh.toLocaleString()+'<span style="font-size:16px">万</span></div><div class="lbl">Q2总充电量（kWh）</div><div class="chg chg-up">同比 +18.3%</div></div>'+
-    '<div class="stat-card"><div class="val" style="color:#059669;">'+r.supplyDemandAvg+'</div><div class="lbl">全市供需比均值</div><div class="chg chg-up">较Q1 +0.04</div></div>'+
-    '<div class="stat-card"><div class="val" style="color:#d97706;">'+r.complianceRate+'<span style="font-size:16px">%</span></div><div class="lbl">补贴申报合规率</div><div class="chg chg-up">较Q1 +1.7%</div></div>'+
-    '<div class="stat-card"><div class="val" style="color:#dc2626;">'+r.lowEffPiles.toLocaleString()+'</div><div class="lbl">低效桩数量</div><div class="chg chg-down">较Q1 +5.2%</div></div>'+
-    '<div class="stat-card"><div class="val" style="color:#7c3aed;">'+r.shortageGrids+'<span style="font-size:16px">个</span></div><div class="lbl">供给不足网格</div><div class="chg chg-up">较Q1 −3个（治理见效）</div></div>'+
-    '<div class="stat-card"><div class="val" style="color:#dc2626;">'+r.anomalySites+'<span style="font-size:16px">个</span></div><div class="lbl">交叉验证标记异常</div><div class="chg chg-warn">需重点核查</div></div>';
+    '<div class="stat-card accent-teal"><div class="val">'+r.totalKwh.toLocaleString()+'<span class="unit"> 万</span></div><div class="lbl">Q2 总充电量（kWh）</div><div class="sub">同比 +18.3%</div></div>'+
+    '<div class="stat-card accent-green"><div class="val">'+r.supplyDemandAvg+'</div><div class="lbl">全市供需比均值</div><div class="sub">较 Q1 +0.04</div></div>'+
+    '<div class="stat-card accent-amber"><div class="val">'+r.complianceRate+'<span class="unit">%</span></div><div class="lbl">补贴申报合规率</div><div class="sub">较 Q1 +1.7%</div></div>'+
+    '<div class="stat-card accent-red"><div class="val">'+r.lowEffPiles.toLocaleString()+'</div><div class="lbl">低效桩数量</div><div class="sub">较 Q1 +5.2%</div></div>'+
+    '<div class="stat-card accent-slate"><div class="val">'+r.shortageGrids+'<span class="unit"> 个</span></div><div class="lbl">供给不足网格</div><div class="sub">较 Q1 -3 个（治理见效）</div></div>'+
+    '<div class="stat-card accent-red"><div class="val">'+r.anomalySites+'<span class="unit"> 个</span></div><div class="lbl">交叉验证标记异常</div><div class="sub">需重点核查</div></div>';
 }
 
 // =============================================================
@@ -738,7 +765,7 @@ function initTables(){
   D.verify.anomalyTable.forEach(function(r){
     var signs=r.signals.length?r.signals.map(function(s){return '<span class="tag tag-fault">'+s+'</span>'}).join(' '):'—';
     var ac=r.level==='high'?'badge-r':'badge-g';
-    ah+='<tr><td>'+r.station+'</td><td>'+r.operator+'</td><td class="num">'+r.reported+'</td><td class="num">'+r.baseline+'</td><td class="num"><span style="color:'+(r.level==='high'?'#dc2626':'#059669')+';font-weight:700">'+r.deviation+'</span></td><td>'+signs+'</td><td><span class="badge '+ac+'">'+r.advice+'</span></td></tr>';
+    ah+='<tr><td>'+r.station+'</td><td>'+r.operator+'</td><td class="num">'+r.reported+'</td><td class="num">'+r.baseline+'</td><td class="num"><span style="color:'+(r.level==='high'?'#d92d20':'#079455')+';font-weight:700">'+r.deviation+'</span></td><td>'+signs+'</td><td><span class="badge '+ac+'">'+r.advice+'</span></td></tr>';
   });
   document.getElementById('tblAnomaly').innerHTML=ah;
 
@@ -747,21 +774,21 @@ function initTables(){
   D.report.gridDecisions.forEach(function(r){
     var gc=r.ratio<0.5?'r':'o';
     var gb=gc==='r'?'badge-r':'badge-o';
-    gh+='<tr><td>'+r.id+'</td><td>'+r.district+'</td><td class="num"><span style="color:'+(gc==='r'?'#dc2626':'#d97706')+';font-weight:700">'+r.ratio.toFixed(2)+'</span></td><td class="num">'+r.repairable+'个</td><td class="num">'+r.afterRatio.toFixed(2)+'</td><td><span class="badge '+gb+'">'+r.path+'</span></td></tr>';
+    gh+='<tr><td>'+r.id+'</td><td>'+r.district+'</td><td class="num"><span style="color:'+(gc==='r'?'#d92d20':'#dc6803')+';font-weight:700">'+r.ratio.toFixed(2)+'</span></td><td class="num">'+r.repairable+'个</td><td class="num">'+r.afterRatio.toFixed(2)+'</td><td><span class="badge '+gb+'">'+r.path+'</span></td></tr>';
   });
   document.getElementById('tblGridDecision').innerHTML=gh;
 
   // 审计摘要
   var as=D.report.auditSummary;
   document.getElementById('tblAuditSummary').innerHTML='<thead><tr><th>核验维度</th><th>Q2结果</th><th>Q1结果</th><th>变化</th></tr></thead>'+
-    '<tr><td>偏离＞15%站点占比</td><td class="num"><span style="color:#dc2626">'+as.highDevPct+'%</span></td><td class="num">'+as.highDevPrev+'%</td><td class="num"><span style="color:#059669">↓ '+(as.highDevPrev-as.highDevPct).toFixed(1)+'%</span></td></tr>'+
-    '<tr><td>API状态矛盾站点</td><td class="num">'+as.contradictionSites+'个</td><td class="num">'+as.contradictionPrev+'个</td><td class="num"><span style="color:#059669">↓ '+(as.contradictionPrev-as.contradictionSites)+'个</span></td></tr>'+
-    '<tr><td>投诉集中站点核验</td><td class="num">完成'+as.reviewedSites+'个</td><td class="num">完成'+as.reviewedPrev+'个</td><td class="num"><span style="color:#2563eb">↑ '+(as.reviewedSites-as.reviewedPrev)+'个</span></td></tr>';
+    '<tr><td>偏离＞15%站点占比</td><td class="num"><span style="color:#d92d20">'+as.highDevPct+'%</span></td><td class="num">'+as.highDevPrev+'%</td><td class="num"><span style="color:#079455">↓ '+(as.highDevPrev-as.highDevPct).toFixed(1)+'%</span></td></tr>'+
+    '<tr><td>API状态矛盾站点</td><td class="num">'+as.contradictionSites+'个</td><td class="num">'+as.contradictionPrev+'个</td><td class="num"><span style="color:#079455">↓ '+(as.contradictionPrev-as.contradictionSites)+'个</span></td></tr>'+
+    '<tr><td>投诉集中站点核验</td><td class="num">完成'+as.reviewedSites+'个</td><td class="num">完成'+as.reviewedPrev+'个</td><td class="num"><span style="color:#0f766e">↑ '+(as.reviewedSites-as.reviewedPrev)+'个</span></td></tr>';
 
   // 数据质量
   var dq='<thead><tr><th>数据源</th><th>完整率</th><th>及时率</th><th>准确率</th><th>覆盖范围</th><th>运行状态</th></tr></thead>';
   D.report.dataQuality.forEach(function(r){
-    var sc=r.status==='normal'?'#059669':'#d97706';
+    var sc=r.status==='normal'?'#079455':'#dc6803';
     var sb=r.status==='normal'?'badge badge-g':'badge badge-o';
     dq+='<tr><td>'+r.source+'</td><td><span style="color:'+sc+'">'+r.completeness+'</span></td><td><span style="color:'+sc+'">'+r.timeliness+'</span></td><td><span style="color:'+sc+'">'+r.accuracy+'</span></td><td>'+r.coverage+'</td><td><span class="'+sb+'">'+(r.status==='normal'?'正常':'部分不稳定')+'</span></td></tr>';
   });
@@ -770,7 +797,7 @@ function initTables(){
   // 修复进度
   var rp='';
   D.attribution.repairProgress.forEach(function(r){
-    var pc=r.pct<20?'#dc2626':r.pct<28?'#d97706':'#059669';
+    var pc=r.pct<20?'#d92d20':r.pct<28?'#dc6803':'#079455';
     rp+='<div class="progress-card"><div class="p-info"><div class="p-name">'+r.name+'</div><div class="p-meta">待修复 '+(r.total-r.done)+'个 / 总计 '+r.total+'个</div></div><div class="p-val" style="color:'+pc+'">'+r.pct+'%</div></div>';
   });
   document.getElementById('repairProgress').innerHTML=rp;
@@ -780,7 +807,7 @@ function renderAttrTable(data){
   var h='';
   data.forEach(function(r){
     var tagsHtml=r.tags.map(function(t,i){return '<span class="tag '+r.tagCls[i]+'">'+t+'</span>'}).join(' ');
-    h+='<tr><td>'+r.station+'</td><td>'+r.district+'</td><td>'+r.operator+'</td><td class="num">'+r.daily+'</td><td class="num">'+r.avg+'</td><td class="num"><span style="color:#dc2626;font-weight:600">'+r.dev+'</span></td><td>'+tagsHtml+'</td><td>'+r.action+'</td></tr>';
+    h+='<tr><td>'+r.station+'</td><td>'+r.district+'</td><td>'+r.operator+'</td><td class="num">'+r.daily+'</td><td class="num">'+r.avg+'</td><td class="num"><span style="color:#d92d20;font-weight:600">'+r.dev+'</span></td><td>'+tagsHtml+'</td><td>'+r.action+'</td></tr>';
   });
   document.getElementById('attrTbody').innerHTML=h;
 }
@@ -808,10 +835,10 @@ function initMaps(){
   fetch('https://geo.datav.aliyun.com/areas_v3/bound/310000_full.json')
     .then(function(r){return r.json()})
     .then(function(geo){
-      L.geoJSON(geo,{style:{color:'#94a3b8',weight:1,fillOpacity:0.03,fillColor:'#2563eb'},onEachFeature:function(f,l){l.bindPopup(f.properties.name)}}).addTo(map1);
+      L.geoJSON(geo,{style:{color:'#98a2b3',weight:1,fillOpacity:0.03,fillColor:'#0f766e'},onEachFeature:function(f,l){l.bindPopup(f.properties.name)}}).addTo(map1);
     }).catch(function(){});
 
-  var typeColors={shortage:'#dc2626',tight:'#d97706',balanced:'#059669',excess:'#2563eb'};
+  var typeColors={shortage:'#d92d20',tight:'#dc6803',balanced:'#079455',excess:'#0f766e'};
   D.supply.gridData.forEach(function(d){
     L.circleMarker([d.lat,d.lng],{
       radius:d.type==='shortage'?11:d.type==='tight'?8:6,
@@ -828,10 +855,10 @@ function initMaps(){
   fetch('https://geo.datav.aliyun.com/areas_v3/bound/310000_full.json')
     .then(function(r){return r.json()})
     .then(function(geo){
-      L.geoJSON(geo,{style:{color:'#94a3b8',weight:1,fillOpacity:0.03,fillColor:'#2563eb'}}).addTo(map2);
+      L.geoJSON(geo,{style:{color:'#98a2b3',weight:1,fillOpacity:0.03,fillColor:'#0f766e'}}).addTo(map2);
     }).catch(function(){});
 
-  var attrColors={fault:'#e11d48',compete:'#dc2626',access:'#d97706',biz:'#7c3aed',price:'#059669'};
+  var attrColors={fault:'#d92d20',compete:'#f04438',access:'#dc6803',biz:'#667085',price:'#079455'};
   var attrLabels={fault:'设备故障',compete:'周边竞争',access:'可达性下降',biz:'业态变化',price:'价格因素'};
   D.attribution.mapData.forEach(function(d){
     L.circleMarker([d.lat,d.lng],{radius:7,color:attrColors[d.type],fillColor:attrColors[d.type],fillOpacity:0.55,weight:2})
@@ -862,13 +889,13 @@ function initCharts(){
     xAxis:{type:'category',data:su.supplyTrend.months,axisLabel:{fontSize:10}},
     yAxis:{type:'value',name:'供需比',min:0.3,max:1.3,axisLabel:{fontSize:10}},
     series:[
-      {name:'全市均值',type:'line',data:su.supplyTrend.cityAvg,lineStyle:{color:C.blue,width:2},itemStyle:{color:C.blue},symbol:'circle',symbolSize:6,smooth:true},
+      {name:'全市均值',type:'line',data:su.supplyTrend.cityAvg,lineStyle:{color:C.teal,width:2},itemStyle:{color:C.teal},symbol:'circle',symbolSize:6,smooth:true},
       {name:'松江',type:'line',data:su.supplyTrend.songjiang,lineStyle:{color:C.red,width:1.5},itemStyle:{color:C.red},symbol:'circle',symbolSize:5,smooth:true},
-      {name:'青浦',type:'line',data:su.supplyTrend.qingpu,lineStyle:{color:C.orange,width:1.5},itemStyle:{color:C.orange},symbol:'circle',symbolSize:5,smooth:true},
-      {name:'奉贤',type:'line',data:su.supplyTrend.fengxian,lineStyle:{color:C.purple,width:1.5},itemStyle:{color:C.purple},symbol:'circle',symbolSize:5,smooth:true}
+      {name:'青浦',type:'line',data:su.supplyTrend.qingpu,lineStyle:{color:C.amber,width:1.5},itemStyle:{color:C.amber},symbol:'circle',symbolSize:5,smooth:true},
+      {name:'奉贤',type:'line',data:su.supplyTrend.fengxian,lineStyle:{color:C.slate,width:1.5},itemStyle:{color:C.slate},symbol:'circle',symbolSize:5,smooth:true}
     ]});
 
-  var pieColors=[C.blue,'#60a5fa',C.green,'#34d399',C.orange,C.gray];
+  var pieColors=[C.teal,'#99f6e4',C.green,'#6ee7b7',C.amber,C.slate];
   initChart('chOperatorShare',{
     tooltip:{trigger:'item'},legend:{bottom:0,textStyle:{fontSize:10}},
     series:[{type:'pie',radius:['45%','72%'],center:['50%','45%'],label:{fontSize:10},
@@ -880,10 +907,10 @@ function initCharts(){
     xAxis:{type:'category',data:su.peakGap.hours,axisLabel:{fontSize:10}},
     yAxis:{type:'value',name:'充电量（万kWh）',axisLabel:{fontSize:10}},
     series:[
-      {name:'供给能力',type:'bar',data:su.peakGap.supply,itemStyle:{color:C.blue,barBorderRadius:[4,4,0,0]},barWidth:24,barGap:'30%'},
+      {name:'供给能力',type:'bar',data:su.peakGap.supply,itemStyle:{color:C.teal,barBorderRadius:[4,4,0,0]},barWidth:24,barGap:'30%'},
       {name:'实际需求',type:'bar',data:su.peakGap.demand,itemStyle:{color:C.red,barBorderRadius:[4,4,0,0]},barWidth:24}]});
 
-  var attrPieColors=['#e11d48',C.red,C.orange,C.purple,C.green];
+  var attrPieColors=['#d92d20','#f04438','#dc6803','#667085','#079455'];
   initChart('chAttrPie',{
     tooltip:{trigger:'item'},legend:{bottom:0,textStyle:{fontSize:10}},
     series:[{type:'pie',radius:'58%',center:['50%','45%'],label:{fontSize:10},
@@ -895,10 +922,10 @@ function initCharts(){
     xAxis:{type:'category',data:at.attrTrend.months,axisLabel:{fontSize:10}},
     yAxis:{type:'value',name:'数量',axisLabel:{fontSize:10}},
     series:[
-      {name:'设备故障',type:'line',data:at.attrTrend.fault,lineStyle:{color:'#e11d48',width:1.5},itemStyle:{color:'#e11d48'},symbol:'circle',symbolSize:4},
+      {name:'设备故障',type:'line',data:at.attrTrend.fault,lineStyle:{color:'#d92d20',width:1.5},itemStyle:{color:'#d92d20'},symbol:'circle',symbolSize:4},
       {name:'周边竞争',type:'line',data:at.attrTrend.compete,lineStyle:{color:C.red,width:1.5},itemStyle:{color:C.red},symbol:'circle',symbolSize:4},
-      {name:'可达性下降',type:'line',data:at.attrTrend.access,lineStyle:{color:C.orange,width:1.5},itemStyle:{color:C.orange},symbol:'circle',symbolSize:4},
-      {name:'业态变化',type:'line',data:at.attrTrend.biz,lineStyle:{color:C.purple,width:1.5},itemStyle:{color:C.purple},symbol:'circle',symbolSize:4},
+      {name:'可达性下降',type:'line',data:at.attrTrend.access,lineStyle:{color:C.amber,width:1.5},itemStyle:{color:C.amber},symbol:'circle',symbolSize:4},
+      {name:'业态变化',type:'line',data:at.attrTrend.biz,lineStyle:{color:C.slate,width:1.5},itemStyle:{color:C.slate},symbol:'circle',symbolSize:4},
       {name:'价格因素',type:'line',data:at.attrTrend.price,lineStyle:{color:C.green,width:1.5},itemStyle:{color:C.green},symbol:'circle',symbolSize:4}]});
 
   initChart('chDeviation',{
@@ -907,7 +934,7 @@ function initCharts(){
     xAxis:{type:'category',data:ve.deviation.categories,axisLabel:{fontSize:10,rotate:15}},
     yAxis:[{type:'value',name:'站点数',axisLabel:{fontSize:10}},{type:'value',name:'累计占比',axisLabel:{fontSize:10,formatter:'{value}%'}}],
     series:[
-      {name:'站点数量',type:'bar',data:ve.deviation.counts,itemStyle:{color:C.blue,barBorderRadius:[4,4,0,0]},barWidth:28},
+      {name:'站点数量',type:'bar',data:ve.deviation.counts,itemStyle:{color:C.teal,barBorderRadius:[4,4,0,0]},barWidth:28},
       {name:'累计占比',type:'line',yAxisIndex:1,data:ve.deviation.cumPct,lineStyle:{color:C.red,width:2},itemStyle:{color:C.red},symbol:'circle',symbolSize:7}]});
 
   initChart('chOpDeviation',{
@@ -915,7 +942,7 @@ function initCharts(){
     xAxis:{type:'category',data:ve.opDeviation.operators,axisLabel:{fontSize:10}},
     yAxis:{type:'value',name:'偏离＞15%站点占比（%）',axisLabel:{fontSize:10}},
     series:[{type:'bar',data:ve.opDeviation.rates,
-      itemStyle:{color:function(p){return p.value>8?C.red:p.value>5?C.orange:C.blue},barBorderRadius:[4,4,0,0]},barWidth:18}]});
+      itemStyle:{color:function(p){return p.value>8?C.red:p.value>5?C.amber:C.teal},barBorderRadius:[4,4,0,0]},barWidth:18}]});
 
   initChart('chAbnormalTrend',{
     tooltip:{trigger:'axis'},legend:{data:['偏离＞15%','API状态矛盾'],bottom:0,textStyle:{fontSize:11}},
@@ -923,8 +950,8 @@ function initCharts(){
     xAxis:{type:'category',data:ve.abnormalTrend.months,axisLabel:{fontSize:10}},
     yAxis:{type:'value',name:'站点数',axisLabel:{fontSize:10}},
     series:[
-      {name:'偏离＞15%',type:'line',data:ve.abnormalTrend.highDev,lineStyle:{color:C.red,width:1.5},itemStyle:{color:C.red},symbol:'circle',symbolSize:5,areaStyle:{color:'rgba(220,38,38,0.05)'},smooth:true},
-      {name:'API状态矛盾',type:'line',data:ve.abnormalTrend.apiConflict,lineStyle:{color:C.orange,width:1.5},itemStyle:{color:C.orange},symbol:'circle',symbolSize:5,smooth:true}]});
+      {name:'偏离＞15%',type:'line',data:ve.abnormalTrend.highDev,lineStyle:{color:C.red,width:1.5},itemStyle:{color:C.red},symbol:'circle',symbolSize:5,areaStyle:{color:'rgba(217,45,32,0.06)'},smooth:true},
+      {name:'API状态矛盾',type:'line',data:ve.abnormalTrend.apiConflict,lineStyle:{color:C.amber,width:1.5},itemStyle:{color:C.amber},symbol:'circle',symbolSize:5,smooth:true}]});
 
   initChart('chRptSupply',{
     tooltip:{trigger:'axis'},legend:{data:['4月','5月','6月'],bottom:0,textStyle:{fontSize:11}},
@@ -933,8 +960,8 @@ function initCharts(){
     yAxis:{type:'value',name:'供需比',min:0.3,axisLabel:{fontSize:10}},
     series:[
       {name:'4月',type:'line',data:rp.rptSupply.april,lineStyle:{color:C.gray,width:1.5},symbol:'circle',symbolSize:5},
-      {name:'5月',type:'line',data:rp.rptSupply.may,lineStyle:{color:C.orange,width:1.5},symbol:'circle',symbolSize:5},
-      {name:'6月',type:'line',data:rp.rptSupply.june,lineStyle:{color:C.blue,width:1.5},symbol:'circle',symbolSize:5}]});
+      {name:'5月',type:'line',data:rp.rptSupply.may,lineStyle:{color:C.amber,width:1.5},symbol:'circle',symbolSize:5},
+      {name:'6月',type:'line',data:rp.rptSupply.june,lineStyle:{color:C.teal,width:1.5},symbol:'circle',symbolSize:5}]});
 
   initChart('chRptAttr',{
     tooltip:{trigger:'axis'},legend:{data:['Q1','Q2'],bottom:0,textStyle:{fontSize:11}},
@@ -942,8 +969,8 @@ function initCharts(){
     xAxis:{type:'category',data:rp.rptAttr.categories,axisLabel:{fontSize:10}},
     yAxis:{type:'value',name:'数量',axisLabel:{fontSize:10}},
     series:[
-      {name:'Q1',type:'bar',data:rp.rptAttr.q1,itemStyle:{color:'#cbd5e1',barBorderRadius:[4,4,0,0]},barWidth:20,barGap:'30%'},
-      {name:'Q2',type:'bar',data:rp.rptAttr.q2,itemStyle:{color:C.blue,barBorderRadius:[4,4,0,0]},barWidth:20}]});
+      {name:'Q1',type:'bar',data:rp.rptAttr.q1,itemStyle:{color:'#d0d5dd',barBorderRadius:[4,4,0,0]},barWidth:20,barGap:'30%'},
+      {name:'Q2',type:'bar',data:rp.rptAttr.q2,itemStyle:{color:C.teal,barBorderRadius:[4,4,0,0]},barWidth:20}]});
 }
 
 // =============================================================
@@ -1071,27 +1098,151 @@ function exportPDF(level){
 
   // 构建完整报告HTML
   var reportHtml = '<!DOCTYPE html><html lang="zh-CN"><head><meta charset="UTF-8"><title>'+title+'</title>'+
-    '<style>'+
-    '*{margin:0;padding:0;box-sizing:border-box}'+
-    'body{font-family:"PingFang SC","Microsoft YaHei","SimSun",sans-serif;color:#1e293b;font-size:13px;line-height:1.8;padding:40px 50px;max-width:210mm;margin:0 auto}'+
-    '.report-head{border-bottom:3px solid #2563eb;padding-bottom:16px;margin-bottom:24px}'+
-    '.report-head h1{font-size:22px;color:#0f172a;margin-bottom:6px}'+
-    '.report-head .meta{font-size:11px;color:#94a3b8}'+
-    'h3{font-size:15px;color:#0f172a;margin:22px 0 10px;padding-left:10px;border-left:3px solid #2563eb}'+
-    'p{margin:8px 0;text-indent:0}'+
-    'b{color:#0f172a}'+
-    'table{width:100%;border-collapse:collapse;margin:12px 0;font-size:11px}'+
-    'th{background:#f1f5f9;color:#475569;font-weight:600;padding:8px 10px;border:1px solid #e2e8f0;text-align:left}'+
-    'td{padding:7px 10px;border:1px solid #e2e8f0;color:#334155}'+
-    'tr:nth-child(even) td{background:#fafbfc}'+
-    '.summary-box{background:#eff6ff;border:1px solid #bfdbfe;border-radius:6px;padding:16px;margin:12px 0}'+
-    '.summary-box h3{margin-top:0;border-left-color:#3b82f6}'+
-    'ol,ul{margin:8px 0;padding-left:24px}'+
-    'li{margin:4px 0}'+
-    '.report-foot{border-top:1px solid #e2e8f0;margin-top:24px;padding-top:12px;font-size:10px;color:#94a3b8}'+
-    '@media print{body{padding:20px 30px}'+
-    '@page{size:A4;margin:15mm}'+
-    '}</style></head><body>'+
+    '	<style>
+	*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+	body{font-family:Inter,-apple-system,"PingFang SC","Microsoft YaHei",sans-serif;background:#f5f6f8;color:#101828;font-size:13px;line-height:1.5;min-height:100vh;-webkit-font-smoothing:antialiased}
+
+	/* ── Topbar ──────────────────────────────── */
+	.topbar{background:#101828;height:52px;display:flex;align-items:center;padding:0 24px;justify-content:space-between;position:sticky;top:0;z-index:1000}
+	.topbar .brand{display:flex;align-items:center;gap:10px;font-size:14px;font-weight:600;color:#f8f9fb;letter-spacing:-0.2px}
+	.topbar .brand .dot{width:6px;height:6px;background:#12b76a;border-radius:50%;flex-shrink:0}
+	@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.35}}
+	.topbar .nav-links{display:flex;gap:0}
+	.topbar .nav-links span{cursor:pointer;padding:15px 18px;font-size:12.5px;color:#98a2b3;transition:all 0.15s;white-space:nowrap;font-weight:500;letter-spacing:0.2px;border-bottom:2px solid transparent;margin-bottom:-1px}
+	.topbar .nav-links span:hover{color:#e4e7ec;background:rgba(255,255,255,0.03)}
+	.topbar .nav-links span.active{color:#fff;border-bottom-color:#0f766e;font-weight:600}
+	.topbar .right{display:flex;align-items:center;gap:14px}
+	.topbar .right .live{display:flex;align-items:center;gap:6px;font-size:11px;color:#98a2b3}
+	.topbar .right .live .ts{color:#e4e7ec;font-variant-numeric:tabular-nums;font-size:12px}
+	.topbar .right .countdown{font-size:10px;color:#667085;min-width:42px;text-align:right}
+	.topbar .right .refresh-btn{cursor:pointer;display:flex;align-items:center;gap:5px;padding:5px 12px;background:rgba(15,118,110,0.12);border:1px solid rgba(15,118,110,0.25);color:#5ee6d4;border-radius:5px;font-size:11px;font-weight:500;transition:all 0.15s;white-space:nowrap}
+	.topbar .right .refresh-btn:hover{background:rgba(15,118,110,0.22);border-color:rgba(15,118,110,0.45);color:#99f6e4}
+	@keyframes spin{100%{transform:rotate(360deg)}}
+	.topbar .right .refresh-btn .icon{display:inline-block;font-size:12px;transition:transform 0.6s}
+	.topbar .right .refresh-btn.spinning .icon{animation:spin 0.6s ease-in-out}
+
+	/* ── Layout ────────────────────────────────── */
+	.main{padding:22px 24px;max-width:1520px;margin:0 auto}
+	.tab-content{display:none}
+	.tab-content.active{display:block}
+
+	/* ── Stat Row ──────────────────────────────── */
+	.stat-row{display:grid;grid-template-columns:repeat(6,1fr);gap:12px;margin-bottom:18px}
+	.stat-card{background:#fff;border-radius:8px;padding:16px 18px;border:1px solid #eaecf0;transition:box-shadow 0.15s}
+	.stat-card:hover{box-shadow:0 2px 8px rgba(16,24,40,0.06)}
+	.stat-card .val{font-size:26px;font-weight:700;line-height:1.15;color:#101828;letter-spacing:-0.3px;margin-bottom:2px}
+	.stat-card .val .unit{font-size:12px;font-weight:500;color:#98a2b3;margin-left:2px}
+	.stat-card .lbl{font-size:11px;color:#667085;letter-spacing:0.1px;font-weight:500}
+	.stat-card .sub{font-size:10px;color:#98a2b3;margin-top:3px}
+	.stat-card.accent-red{border-left:3px solid #d92d20}
+	.stat-card.accent-amber{border-left:3px solid #dc6803}
+	.stat-card.accent-green{border-left:3px solid #079455}
+	.stat-card.accent-teal{border-left:3px solid #0f766e}
+	.stat-card.accent-slate{border-left:3px solid #667085}
+
+	/* ── Grid & Card ────────────────────────────── */
+	.grid{display:grid;gap:16px;margin-bottom:16px}
+	.grid-2{grid-template-columns:1fr 1fr}
+	.grid-3{grid-template-columns:1fr 1fr 1fr}
+	.grid-2r{grid-template-columns:2fr 1fr}
+	.grid-2l{grid-template-columns:1fr 2fr}
+
+	.card{background:#fff;border-radius:8px;border:1px solid #eaecf0;overflow:hidden;box-shadow:0 1px 3px rgba(16,24,40,0.04)}
+	.card-hd{padding:13px 18px;border-bottom:1px solid #f2f4f7;display:flex;justify-content:space-between;align-items:center;font-size:12.5px;font-weight:600;color:#101828;letter-spacing:0.1px}
+	.card-bd{padding:14px;overflow-x:auto}
+	.card-bd0{padding:0;overflow-x:auto}
+
+	/* ── Charts ─────────────────────────────────── */
+	.chart{width:100%;overflow:hidden}
+	.chart.h420{height:420px}.chart.h360{height:360px}.chart.h300{height:300px}.chart.h260{height:260px}.chart.h220{height:220px}
+
+	/* ── Tables ─────────────────────────────────── */
+	.tbl{width:100%;min-width:500px;border-collapse:collapse;font-size:12px}
+	.tbl th{background:#f9fafb;color:#667085;font-weight:600;padding:9px 12px;border-bottom:1px solid #eaecf0;text-align:left;font-size:10.5px;letter-spacing:0.3px;text-transform:uppercase}
+	.tbl td{padding:8px 12px;border-bottom:1px solid #f2f4f7;color:#344054;vertical-align:top;font-size:12px}
+	.tbl tbody tr:hover td{background:#f9fafb}
+	.tbl .num{text-align:right;font-variant-numeric:tabular-nums;font-family:"SF Mono","JetBrains Mono","Consolas",monospace;font-size:11.5px}
+
+	/* ── Badges ─────────────────────────────────── */
+	.badge{display:inline-block;padding:2px 8px;border-radius:5px;font-size:10px;font-weight:600;white-space:nowrap;letter-spacing:0.1px}
+	.badge-r{background:#fef3f2;color:#b42318}
+	.badge-o{background:#fffaeb;color:#b54708}
+	.badge-g{background:#ecfdf3;color:#067647}
+	.badge-b{background:#f0fdfa;color:#0f766e}
+	.badge-p{background:#f8f9fc;color:#475569}
+
+	/* ── Maps ───────────────────────────────────── */
+	#map,#map2{width:100%;height:460px;border-radius:4px}
+	.legend-inline{display:flex;gap:18px;font-size:10.5px;color:#667085;padding:8px 16px;flex-wrap:wrap;align-items:center}
+	.legend-inline .dot{width:9px;height:9px;border-radius:50%;display:inline-block;margin-right:4px;vertical-align:middle}
+
+	/* ── Report Sections ────────────────────────── */
+	.rpt-section{margin-bottom:26px}
+	.rpt-section h3{font-size:14px;font-weight:700;color:#101828;margin-bottom:12px;padding-bottom:8px;border-bottom:1px solid #eaecf0;display:flex;align-items:center;gap:9px;letter-spacing:-0.1px}
+	.rpt-section h3 .num{display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;border-radius:6px;background:#0f766e;color:#fff;font-size:11px;font-weight:700;flex-shrink:0}
+	.rpt-card{background:#fafbfc;border:1px solid #eaecf0;border-radius:8px;padding:20px;margin-bottom:12px;transition:box-shadow 0.15s}
+	.rpt-card:hover{box-shadow:0 1px 4px rgba(16,24,40,0.04)}
+	.rpt-card h4{font-size:12.5px;font-weight:600;color:#101828;margin-bottom:10px}
+	.rpt-card p{font-size:12px;color:#475569;line-height:1.85}
+	.rpt-insight{background:#f0fdfa;border-left:3px solid #0f766e;padding:12px 16px;margin:12px 0;font-size:12px;color:#134e4a;border-radius:0 6px 6px 0;line-height:1.8}
+	.rpt-warn{background:#fef3f2;border-left:3px solid #d92d20;padding:12px 16px;margin:12px 0;font-size:12px;color:#7a271a;border-radius:0 6px 6px 0;line-height:1.8}
+
+	/* ── Export Cards ───────────────────────────── */
+	.export-panel{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px}
+	.export-card{background:#fff;border:1px solid #eaecf0;border-radius:8px;padding:20px;cursor:pointer;transition:all 0.2s;position:relative;overflow:hidden}
+	.export-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:#0f766e;opacity:0;transition:opacity 0.2s}
+	.export-card:hover{border-color:#0f766e;box-shadow:0 4px 16px rgba(15,118,110,0.08);transform:translateY(-1px)}
+	.export-card:hover::before{opacity:1}
+	.export-card .ec-level{font-size:10px;font-weight:700;color:#0f766e;letter-spacing:0.8px;text-transform:uppercase;margin-bottom:8px}
+	.export-card .ec-title{font-size:13px;font-weight:600;color:#101828;margin-bottom:4px;letter-spacing:-0.1px}
+	.export-card .ec-desc{font-size:11px;color:#98a2b3;line-height:1.5;margin-bottom:10px}
+	.export-card .ec-action{display:inline-flex;align-items:center;gap:4px;font-size:10.5px;font-weight:600;color:#0f766e;letter-spacing:0.2px}
+	.export-card .ec-action .arr{transition:transform 0.2s}
+	.export-card:hover .ec-action .arr{transform:translateX(3px)}
+
+	/* ── Misc ───────────────────────────────────── */
+	::-webkit-scrollbar{width:5px}
+	::-webkit-scrollbar-track{background:transparent}
+	::-webkit-scrollbar-thumb{background:#d0d5dd;border-radius:3px}
+
+	.filter-bar{display:flex;gap:8px;align-items:center;font-size:11px;flex-wrap:wrap}
+	.filter-bar select,.filter-bar input{border:1px solid #d0d5dd;border-radius:5px;padding:5px 10px;font-size:11px;color:#344054;background:#fff;transition:border-color 0.15s}
+	.filter-bar select:focus,.filter-bar input:focus{outline:none;border-color:#0f766e;box-shadow:0 0 0 3px rgba(15,118,110,0.08)}
+
+	.footbar{background:#fff;border-top:1px solid #eaecf0;padding:10px 24px;font-size:10.5px;color:#98a2b3;display:flex;justify-content:space-between;letter-spacing:0.1px}
+
+	.tag-row{display:flex;gap:5px;flex-wrap:wrap}
+	.tag{display:inline-block;padding:2px 8px;border-radius:4px;font-size:10px;font-weight:600;white-space:nowrap;letter-spacing:0.1px}
+	.tag-fault{background:#fef3f2;color:#b42318}.tag-comp{background:#fef3f2;color:#d92d20}
+	.tag-access{background:#fffaeb;color:#b54708}.tag-biz{background:#f8f9fc;color:#475569}
+	.tag-price{background:#ecfdf3;color:#067647}
+
+	.bar-wrap{background:#f2f4f7;border-radius:4px;height:6px;overflow:hidden;margin-top:5px}
+	.bar-fill{border-radius:4px;height:100%;transition:width 0.6s ease}
+
+	.refresh-toast{position:fixed;top:64px;left:50%;transform:translateX(-50%);background:#101828;color:#fff;padding:8px 20px;border-radius:6px;font-size:11px;z-index:9999;opacity:0;transition:opacity 0.3s;pointer-events:none;letter-spacing:0.1px}
+	.refresh-toast.show{opacity:1}
+
+	.progress-card{display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid #f2f4f7}
+	.progress-card:last-child{border-bottom:none}
+	.progress-card .p-info{flex:1;min-width:0}
+	.progress-card .p-name{font-size:11.5px;font-weight:600;color:#344054;margin-bottom:3px}
+	.progress-card .p-meta{font-size:10px;color:#98a2b3}
+	.progress-card .p-val{font-size:13px;font-weight:700;text-align:right;white-space:nowrap}
+
+	@media(max-width:1200px){
+	  .stat-row{grid-template-columns:repeat(3,1fr)}
+	  .grid-2,.grid-2r,.grid-2l{grid-template-columns:1fr}
+	  .grid-3{grid-template-columns:1fr 1fr}
+	  .export-panel{grid-template-columns:repeat(2,1fr)}
+	}
+	@media(max-width:768px){
+	  .stat-row{grid-template-columns:repeat(2,1fr)}
+	  .grid-3{grid-template-columns:1fr}
+	  .export-panel{grid-template-columns:1fr}
+	  .topbar .nav-links span{padding:15px 12px;font-size:11px}
+	}
+	</style></head><body>'+
     '<div class="report-head"><h1>'+title+'</h1>'+
     '<div class="meta">「桩探」数据驱动的行业分析报告引擎 · 报告生成时间：'+timeStr+' · 数据来源：D1市级充电量平台 / D2运营商公开API / D3高德百度地图 / D4 12345热线 / D5用户评论</div></div>'+
     bodyHtml+
@@ -1111,10 +1262,10 @@ function exportPDF(level){
     if (!tip) {
       tip = document.createElement('div');
       tip.id = 'exportTip';
-      tip.style.cssText = 'position:fixed;top:20px;left:50%;transform:translateX(-50%);background:#fef2f2;border:2px solid #dc2626;border-radius:10px;padding:16px 24px;z-index:9999;font-size:13px;color:#991b1b;max-width:480px;text-align:center;box-shadow:0 8px 30px rgba(0,0,0,0.15)';
+      tip.style.cssText = 'position:fixed;top:20px;left:50%;transform:translateX(-50%);background:#fef2f2;border:2px solid #d92d20;border-radius:10px;padding:16px 24px;z-index:9999;font-size:13px;color:#991b1b;max-width:480px;text-align:center;box-shadow:0 8px 30px rgba(0,0,0,0.15)';
       document.body.appendChild(tip);
     }
-    tip.innerHTML = '<b>⚠️ 弹窗被浏览器拦截</b><br><small>请点击地址栏右侧的拦截图标，选择「始终允许 popup」后重试。</small><button onclick="this.parentNode.remove()" style="display:block;margin:8px auto 0;padding:4px 16px;background:#dc2626;color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:11px">关闭</button>';
+    tip.innerHTML = '<b>⚠️ 弹窗被浏览器拦截</b><br><small>请点击地址栏右侧的拦截图标，选择「始终允许 popup」后重试。</small><button onclick="this.parentNode.remove()" style="display:block;margin:8px auto 0;padding:4px 16px;background:#d92d20;color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:11px">关闭</button>';
     setTimeout(function(){ if(tip.parentNode) tip.remove(); }, 8000);
     return;
   }
@@ -1131,9 +1282,9 @@ function exportPDF(level){
 }
 
 function flashCard(el){
-  el.style.borderColor='#22c55e';
-  el.style.background='#f0fdf4';
-  setTimeout(function(){el.style.borderColor='#e2e8f0';el.style.background='#fff'},800);
+  el.style.borderColor='#0f766e';
+  el.style.background='#f0fdfa';
+  setTimeout(function(){el.style.borderColor='#eaecf0';el.style.background='#fff'},800);
 }
 
 // =============================================================
