@@ -1102,6 +1102,10 @@ function exportPDF(level){
   // 在新窗口中打开并自动打印
   var w = window.open('about:blank', '_blank', 'width=900,height=700');
   if (!w || w.closed) {
+    // 尝试不带尺寸参数（部分浏览器对popup更严格）
+    w = window.open('about:blank', '_blank');
+  }
+  if (!w || w.closed) {
     // 弹窗被浏览器拦截
     var tip = document.getElementById('exportTip');
     if (!tip) {
@@ -1110,7 +1114,7 @@ function exportPDF(level){
       tip.style.cssText = 'position:fixed;top:20px;left:50%;transform:translateX(-50%);background:#fef2f2;border:2px solid #dc2626;border-radius:10px;padding:16px 24px;z-index:9999;font-size:13px;color:#991b1b;max-width:480px;text-align:center;box-shadow:0 8px 30px rgba(0,0,0,0.15)';
       document.body.appendChild(tip);
     }
-    tip.innerHTML = '<b>⚠️ 弹窗被浏览器拦截</b><br><small>请点击地址栏右侧的拦截图标，选择「始终允许 popup」后重试。<br>或将 <u>about:blank</u> 加入弹窗白名单。</small><button onclick="this.parentNode.remove()" style="display:block;margin:8px auto 0;padding:4px 16px;background:#dc2626;color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:11px">关闭</button>';
+    tip.innerHTML = '<b>⚠️ 弹窗被浏览器拦截</b><br><small>请点击地址栏右侧的拦截图标，选择「始终允许 popup」后重试。</small><button onclick="this.parentNode.remove()" style="display:block;margin:8px auto 0;padding:4px 16px;background:#dc2626;color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:11px">关闭</button>';
     setTimeout(function(){ if(tip.parentNode) tip.remove(); }, 8000);
     return;
   }
