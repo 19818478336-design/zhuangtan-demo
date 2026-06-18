@@ -10,151 +10,140 @@
 <script src="https://cdn.jsdelivr.net/npm/echarts@5.5.0/dist/echarts.min.js"></script>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-	<style>
-	*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
-	body{font-family:Inter,-apple-system,"PingFang SC","Microsoft YaHei",sans-serif;background:#f5f6f8;color:#101828;font-size:13px;line-height:1.5;min-height:100vh;-webkit-font-smoothing:antialiased}
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+body{font-family:Inter,-apple-system,"PingFang SC","Microsoft YaHei",sans-serif;background:#f5f6f8;color:#101828;font-size:13px;line-height:1.5;min-height:100vh;-webkit-font-smoothing:antialiased}
 
-	/* ── Topbar ──────────────────────────────── */
-	.topbar{background:#101828;height:52px;display:flex;align-items:center;padding:0 24px;justify-content:space-between;position:sticky;top:0;z-index:1000}
-	.topbar .brand{display:flex;align-items:center;gap:10px;font-size:14px;font-weight:600;color:#f8f9fb;letter-spacing:-0.2px}
-	.topbar .brand .dot{width:6px;height:6px;background:#12b76a;border-radius:50%;flex-shrink:0}
-	@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.35}}
-	.topbar .nav-links{display:flex;gap:0}
-	.topbar .nav-links span{cursor:pointer;padding:15px 18px;font-size:12.5px;color:#98a2b3;transition:all 0.15s;white-space:nowrap;font-weight:500;letter-spacing:0.2px;border-bottom:2px solid transparent;margin-bottom:-1px}
-	.topbar .nav-links span:hover{color:#e4e7ec;background:rgba(255,255,255,0.03)}
-	.topbar .nav-links span.active{color:#fff;border-bottom-color:#0f766e;font-weight:600}
-	.topbar .right{display:flex;align-items:center;gap:14px}
-	.topbar .right .live{display:flex;align-items:center;gap:6px;font-size:11px;color:#98a2b3}
-	.topbar .right .live .ts{color:#e4e7ec;font-variant-numeric:tabular-nums;font-size:12px}
-	.topbar .right .countdown{font-size:10px;color:#667085;min-width:42px;text-align:right}
-	.topbar .right .refresh-btn{cursor:pointer;display:flex;align-items:center;gap:5px;padding:5px 12px;background:rgba(15,118,110,0.12);border:1px solid rgba(15,118,110,0.25);color:#5ee6d4;border-radius:5px;font-size:11px;font-weight:500;transition:all 0.15s;white-space:nowrap}
-	.topbar .right .refresh-btn:hover{background:rgba(15,118,110,0.22);border-color:rgba(15,118,110,0.45);color:#99f6e4}
-	@keyframes spin{100%{transform:rotate(360deg)}}
-	.topbar .right .refresh-btn .icon{display:inline-block;font-size:12px;transition:transform 0.6s}
-	.topbar .right .refresh-btn.spinning .icon{animation:spin 0.6s ease-in-out}
+.topbar{background:#101828;height:52px;display:flex;align-items:center;padding:0 24px;justify-content:space-between;position:sticky;top:0;z-index:1000}
+.topbar .brand{display:flex;align-items:center;gap:10px;font-size:14px;font-weight:600;color:#f8f9fb;letter-spacing:-0.2px}
+.topbar .brand .dot{width:6px;height:6px;background:#12b76a;border-radius:50%;flex-shrink:0}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.35}}
+.topbar .nav-links{display:flex;gap:0}
+.topbar .nav-links span{cursor:pointer;padding:15px 18px;font-size:12.5px;color:#98a2b3;transition:all 0.15s;white-space:nowrap;font-weight:500;letter-spacing:0.2px;border-bottom:2px solid transparent;margin-bottom:-1px}
+.topbar .nav-links span:hover{color:#e4e7ec;background:rgba(255,255,255,0.03)}
+.topbar .nav-links span.active{color:#fff;border-bottom-color:#0f766e;font-weight:600}
+.topbar .right{display:flex;align-items:center;gap:14px}
+.topbar .right .live{display:flex;align-items:center;gap:6px;font-size:11px;color:#98a2b3}
+.topbar .right .live .ts{color:#e4e7ec;font-variant-numeric:tabular-nums;font-size:12px}
+.topbar .right .countdown{font-size:10px;color:#667085;min-width:42px;text-align:right}
+.topbar .right .refresh-btn{cursor:pointer;display:flex;align-items:center;gap:5px;padding:5px 12px;background:rgba(15,118,110,0.12);border:1px solid rgba(15,118,110,0.25);color:#5ee6d4;border-radius:5px;font-size:11px;font-weight:500;transition:all 0.15s;white-space:nowrap}
+.topbar .right .refresh-btn:hover{background:rgba(15,118,110,0.22);border-color:rgba(15,118,110,0.45);color:#99f6e4}
+@keyframes spin{100%{transform:rotate(360deg)}}
+.topbar .right .refresh-btn .icon{display:inline-block;font-size:12px;transition:transform 0.6s}
+.topbar .right .refresh-btn.spinning .icon{animation:spin 0.6s ease-in-out}
 
-	/* ── Layout ────────────────────────────────── */
-	.main{padding:22px 24px;max-width:1520px;margin:0 auto}
-	.tab-content{display:none}
-	.tab-content.active{display:block}
+.main{padding:22px 24px;max-width:1520px;margin:0 auto}
+.tab-content{display:none}
+.tab-content.active{display:block}
 
-	/* ── Stat Row ──────────────────────────────── */
-	.stat-row{display:grid;grid-template-columns:repeat(6,1fr);gap:12px;margin-bottom:18px}
-	.stat-card{background:#fff;border-radius:8px;padding:16px 18px;border:1px solid #eaecf0;transition:box-shadow 0.15s}
-	.stat-card:hover{box-shadow:0 2px 8px rgba(16,24,40,0.06)}
-	.stat-card .val{font-size:26px;font-weight:700;line-height:1.15;color:#101828;letter-spacing:-0.3px;margin-bottom:2px}
-	.stat-card .val .unit{font-size:12px;font-weight:500;color:#98a2b3;margin-left:2px}
-	.stat-card .lbl{font-size:11px;color:#667085;letter-spacing:0.1px;font-weight:500}
-	.stat-card .sub{font-size:10px;color:#98a2b3;margin-top:3px}
-	.stat-card.accent-red{border-left:3px solid #d92d20}
-	.stat-card.accent-amber{border-left:3px solid #dc6803}
-	.stat-card.accent-green{border-left:3px solid #079455}
-	.stat-card.accent-teal{border-left:3px solid #0f766e}
-	.stat-card.accent-slate{border-left:3px solid #667085}
+.stat-row{display:grid;grid-template-columns:repeat(6,1fr);gap:12px;margin-bottom:18px}
+.stat-card{background:#fff;border-radius:8px;padding:16px 18px;border:1px solid #eaecf0;transition:box-shadow 0.15s}
+.stat-card:hover{box-shadow:0 2px 8px rgba(16,24,40,0.06)}
+.stat-card .val{font-size:26px;font-weight:700;line-height:1.15;color:#101828;letter-spacing:-0.3px;margin-bottom:2px}
+.stat-card .val .unit{font-size:12px;font-weight:500;color:#98a2b3;margin-left:2px}
+.stat-card .lbl{font-size:11px;color:#667085;letter-spacing:0.1px;font-weight:500}
+.stat-card .sub{font-size:10px;color:#98a2b3;margin-top:3px}
+.stat-card.accent-red{border-left:3px solid #d92d20}
+.stat-card.accent-amber{border-left:3px solid #dc6803}
+.stat-card.accent-green{border-left:3px solid #079455}
+.stat-card.accent-teal{border-left:3px solid #0f766e}
+.stat-card.accent-slate{border-left:3px solid #667085}
 
-	/* ── Grid & Card ────────────────────────────── */
-	.grid{display:grid;gap:16px;margin-bottom:16px}
-	.grid-2{grid-template-columns:1fr 1fr}
-	.grid-3{grid-template-columns:1fr 1fr 1fr}
-	.grid-2r{grid-template-columns:2fr 1fr}
-	.grid-2l{grid-template-columns:1fr 2fr}
+.grid{display:grid;gap:16px;margin-bottom:16px}
+.grid-2{grid-template-columns:1fr 1fr}
+.grid-3{grid-template-columns:1fr 1fr 1fr}
+.grid-2r{grid-template-columns:2fr 1fr}
+.grid-2l{grid-template-columns:1fr 2fr}
 
-	.card{background:#fff;border-radius:8px;border:1px solid #eaecf0;overflow:hidden;box-shadow:0 1px 3px rgba(16,24,40,0.04)}
-	.card-hd{padding:13px 18px;border-bottom:1px solid #f2f4f7;display:flex;justify-content:space-between;align-items:center;font-size:12.5px;font-weight:600;color:#101828;letter-spacing:0.1px}
-	.card-bd{padding:14px;overflow-x:auto}
-	.card-bd0{padding:0;overflow-x:auto}
+.card{background:#fff;border-radius:8px;border:1px solid #eaecf0;overflow:hidden;box-shadow:0 1px 3px rgba(16,24,40,0.04)}
+.card-hd{padding:13px 18px;border-bottom:1px solid #f2f4f7;display:flex;justify-content:space-between;align-items:center;font-size:12.5px;font-weight:600;color:#101828;letter-spacing:0.1px}
+.card-bd{padding:14px;overflow-x:auto}
+.card-bd0{padding:0;overflow-x:auto}
 
-	/* ── Charts ─────────────────────────────────── */
-	.chart{width:100%;overflow:hidden}
-	.chart.h420{height:420px}.chart.h360{height:360px}.chart.h300{height:300px}.chart.h260{height:260px}.chart.h220{height:220px}
+.chart{width:100%;overflow:hidden}
+.chart.h420{height:420px}.chart.h360{height:360px}.chart.h300{height:300px}.chart.h260{height:260px}.chart.h220{height:220px}
 
-	/* ── Tables ─────────────────────────────────── */
-	.tbl{width:100%;min-width:500px;border-collapse:collapse;font-size:12px}
-	.tbl th{background:#f9fafb;color:#667085;font-weight:600;padding:9px 12px;border-bottom:1px solid #eaecf0;text-align:left;font-size:10.5px;letter-spacing:0.3px;text-transform:uppercase}
-	.tbl td{padding:8px 12px;border-bottom:1px solid #f2f4f7;color:#344054;vertical-align:top;font-size:12px}
-	.tbl tbody tr:hover td{background:#f9fafb}
-	.tbl .num{text-align:right;font-variant-numeric:tabular-nums;font-family:"SF Mono","JetBrains Mono","Consolas",monospace;font-size:11.5px}
+.tbl{width:100%;min-width:500px;border-collapse:collapse;font-size:12px}
+.tbl th{background:#f9fafb;color:#667085;font-weight:600;padding:9px 12px;border-bottom:1px solid #eaecf0;text-align:left;font-size:10.5px;letter-spacing:0.3px;text-transform:uppercase}
+.tbl td{padding:8px 12px;border-bottom:1px solid #f2f4f7;color:#344054;vertical-align:top;font-size:12px}
+.tbl tbody tr:hover td{background:#f9fafb}
+.tbl .num{text-align:right;font-variant-numeric:tabular-nums;font-family:"SF Mono","JetBrains Mono","Consolas",monospace;font-size:11.5px}
 
-	/* ── Badges ─────────────────────────────────── */
-	.badge{display:inline-block;padding:2px 8px;border-radius:5px;font-size:10px;font-weight:600;white-space:nowrap;letter-spacing:0.1px}
-	.badge-r{background:#fef3f2;color:#b42318}
-	.badge-o{background:#fffaeb;color:#b54708}
-	.badge-g{background:#ecfdf3;color:#067647}
-	.badge-b{background:#f0fdfa;color:#0f766e}
-	.badge-p{background:#f8f9fc;color:#475569}
+.badge{display:inline-block;padding:2px 8px;border-radius:5px;font-size:10px;font-weight:600;white-space:nowrap;letter-spacing:0.1px}
+.badge-r{background:#fef3f2;color:#b42318}
+.badge-o{background:#fffaeb;color:#b54708}
+.badge-g{background:#ecfdf3;color:#067647}
+.badge-b{background:#f0fdfa;color:#0f766e}
+.badge-p{background:#f8f9fc;color:#475569}
 
-	/* ── Maps ───────────────────────────────────── */
-	#map,#map2{width:100%;height:460px;border-radius:4px}
-	.legend-inline{display:flex;gap:18px;font-size:10.5px;color:#667085;padding:8px 16px;flex-wrap:wrap;align-items:center}
-	.legend-inline .dot{width:9px;height:9px;border-radius:50%;display:inline-block;margin-right:4px;vertical-align:middle}
+#map,#map2{width:100%;height:460px;border-radius:4px}
+.legend-inline{display:flex;gap:18px;font-size:10.5px;color:#667085;padding:8px 16px;flex-wrap:wrap;align-items:center}
+.legend-inline .dot{width:9px;height:9px;border-radius:50%;display:inline-block;margin-right:4px;vertical-align:middle}
 
-	/* ── Report Sections ────────────────────────── */
-	.rpt-section{margin-bottom:26px}
-	.rpt-section h3{font-size:14px;font-weight:700;color:#101828;margin-bottom:12px;padding-bottom:8px;border-bottom:1px solid #eaecf0;display:flex;align-items:center;gap:9px;letter-spacing:-0.1px}
-	.rpt-section h3 .num{display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;border-radius:6px;background:#0f766e;color:#fff;font-size:11px;font-weight:700;flex-shrink:0}
-	.rpt-card{background:#fafbfc;border:1px solid #eaecf0;border-radius:8px;padding:20px;margin-bottom:12px;transition:box-shadow 0.15s}
-	.rpt-card:hover{box-shadow:0 1px 4px rgba(16,24,40,0.04)}
-	.rpt-card h4{font-size:12.5px;font-weight:600;color:#101828;margin-bottom:10px}
-	.rpt-card p{font-size:12px;color:#475569;line-height:1.85}
-	.rpt-insight{background:#f0fdfa;border-left:3px solid #0f766e;padding:12px 16px;margin:12px 0;font-size:12px;color:#134e4a;border-radius:0 6px 6px 0;line-height:1.8}
-	.rpt-warn{background:#fef3f2;border-left:3px solid #d92d20;padding:12px 16px;margin:12px 0;font-size:12px;color:#7a271a;border-radius:0 6px 6px 0;line-height:1.8}
+.rpt-section{margin-bottom:26px}
+.rpt-section h3{font-size:14px;font-weight:700;color:#101828;margin-bottom:12px;padding-bottom:8px;border-bottom:1px solid #eaecf0;display:flex;align-items:center;gap:9px;letter-spacing:-0.1px}
+.rpt-section h3 .num{display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;border-radius:6px;background:#0f766e;color:#fff;font-size:11px;font-weight:700;flex-shrink:0}
+.rpt-card{background:#fafbfc;border:1px solid #eaecf0;border-radius:8px;padding:20px;margin-bottom:12px;transition:box-shadow 0.15s}
+.rpt-card:hover{box-shadow:0 1px 4px rgba(16,24,40,0.04)}
+.rpt-card h4{font-size:12.5px;font-weight:600;color:#101828;margin-bottom:10px}
+.rpt-card p{font-size:12px;color:#475569;line-height:1.85}
+.rpt-insight{background:#f0fdfa;border-left:3px solid #0f766e;padding:12px 16px;margin:12px 0;font-size:12px;color:#134e4a;border-radius:0 6px 6px 0;line-height:1.8}
+.rpt-warn{background:#fef3f2;border-left:3px solid #d92d20;padding:12px 16px;margin:12px 0;font-size:12px;color:#7a271a;border-radius:0 6px 6px 0;line-height:1.8}
 
-	/* ── Export Cards ───────────────────────────── */
-	.export-panel{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px}
-	.export-card{background:#fff;border:1px solid #eaecf0;border-radius:8px;padding:20px;cursor:pointer;transition:all 0.2s;position:relative;overflow:hidden}
-	.export-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:#0f766e;opacity:0;transition:opacity 0.2s}
-	.export-card:hover{border-color:#0f766e;box-shadow:0 4px 16px rgba(15,118,110,0.08);transform:translateY(-1px)}
-	.export-card:hover::before{opacity:1}
-	.export-card .ec-level{font-size:10px;font-weight:700;color:#0f766e;letter-spacing:0.8px;text-transform:uppercase;margin-bottom:8px}
-	.export-card .ec-title{font-size:13px;font-weight:600;color:#101828;margin-bottom:4px;letter-spacing:-0.1px}
-	.export-card .ec-desc{font-size:11px;color:#98a2b3;line-height:1.5;margin-bottom:10px}
-	.export-card .ec-action{display:inline-flex;align-items:center;gap:4px;font-size:10.5px;font-weight:600;color:#0f766e;letter-spacing:0.2px}
-	.export-card .ec-action .arr{transition:transform 0.2s}
-	.export-card:hover .ec-action .arr{transform:translateX(3px)}
+.export-panel{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px}
+.export-card{background:#fff;border:1px solid #eaecf0;border-radius:8px;padding:20px;cursor:pointer;transition:all 0.2s;position:relative;overflow:hidden}
+.export-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:#0f766e;opacity:0;transition:opacity 0.2s}
+.export-card:hover{border-color:#0f766e;box-shadow:0 4px 16px rgba(15,118,110,0.08);transform:translateY(-1px)}
+.export-card:hover::before{opacity:1}
+.export-card .ec-level{font-size:10px;font-weight:700;color:#0f766e;letter-spacing:0.8px;text-transform:uppercase;margin-bottom:8px}
+.export-card .ec-title{font-size:13px;font-weight:600;color:#101828;margin-bottom:4px;letter-spacing:-0.1px}
+.export-card .ec-desc{font-size:11px;color:#98a2b3;line-height:1.5;margin-bottom:10px}
+.export-card .ec-action{display:inline-flex;align-items:center;gap:4px;font-size:10.5px;font-weight:600;color:#0f766e;letter-spacing:0.2px}
+.export-card .ec-action .arr{transition:transform 0.2s}
+.export-card:hover .ec-action .arr{transform:translateX(3px)}
 
-	/* ── Misc ───────────────────────────────────── */
-	::-webkit-scrollbar{width:5px}
-	::-webkit-scrollbar-track{background:transparent}
-	::-webkit-scrollbar-thumb{background:#d0d5dd;border-radius:3px}
+::-webkit-scrollbar{width:5px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:#d0d5dd;border-radius:3px}
 
-	.filter-bar{display:flex;gap:8px;align-items:center;font-size:11px;flex-wrap:wrap}
-	.filter-bar select,.filter-bar input{border:1px solid #d0d5dd;border-radius:5px;padding:5px 10px;font-size:11px;color:#344054;background:#fff;transition:border-color 0.15s}
-	.filter-bar select:focus,.filter-bar input:focus{outline:none;border-color:#0f766e;box-shadow:0 0 0 3px rgba(15,118,110,0.08)}
+.filter-bar{display:flex;gap:8px;align-items:center;font-size:11px;flex-wrap:wrap}
+.filter-bar select,.filter-bar input{border:1px solid #d0d5dd;border-radius:5px;padding:5px 10px;font-size:11px;color:#344054;background:#fff;transition:border-color 0.15s}
+.filter-bar select:focus,.filter-bar input:focus{outline:none;border-color:#0f766e;box-shadow:0 0 0 3px rgba(15,118,110,0.08)}
 
-	.footbar{background:#fff;border-top:1px solid #eaecf0;padding:10px 24px;font-size:10.5px;color:#98a2b3;display:flex;justify-content:space-between;letter-spacing:0.1px}
+.footbar{background:#fff;border-top:1px solid #eaecf0;padding:10px 24px;font-size:10.5px;color:#98a2b3;display:flex;justify-content:space-between;letter-spacing:0.1px}
 
-	.tag-row{display:flex;gap:5px;flex-wrap:wrap}
-	.tag{display:inline-block;padding:2px 8px;border-radius:4px;font-size:10px;font-weight:600;white-space:nowrap;letter-spacing:0.1px}
-	.tag-fault{background:#fef3f2;color:#b42318}.tag-comp{background:#fef3f2;color:#d92d20}
-	.tag-access{background:#fffaeb;color:#b54708}.tag-biz{background:#f8f9fc;color:#475569}
-	.tag-price{background:#ecfdf3;color:#067647}
+.tag-row{display:flex;gap:5px;flex-wrap:wrap}
+.tag{display:inline-block;padding:2px 8px;border-radius:4px;font-size:10px;font-weight:600;white-space:nowrap;letter-spacing:0.1px}
+.tag-fault{background:#fef3f2;color:#b42318}.tag-comp{background:#fef3f2;color:#d92d20}
+.tag-access{background:#fffaeb;color:#b54708}.tag-biz{background:#f8f9fc;color:#475569}
+.tag-price{background:#ecfdf3;color:#067647}
 
-	.bar-wrap{background:#f2f4f7;border-radius:4px;height:6px;overflow:hidden;margin-top:5px}
-	.bar-fill{border-radius:4px;height:100%;transition:width 0.6s ease}
+.bar-wrap{background:#f2f4f7;border-radius:4px;height:6px;overflow:hidden;margin-top:5px}
+.bar-fill{border-radius:4px;height:100%;transition:width 0.6s ease}
 
-	.refresh-toast{position:fixed;top:64px;left:50%;transform:translateX(-50%);background:#101828;color:#fff;padding:8px 20px;border-radius:6px;font-size:11px;z-index:9999;opacity:0;transition:opacity 0.3s;pointer-events:none;letter-spacing:0.1px}
-	.refresh-toast.show{opacity:1}
+.refresh-toast{position:fixed;top:64px;left:50%;transform:translateX(-50%);background:#101828;color:#fff;padding:8px 20px;border-radius:6px;font-size:11px;z-index:9999;opacity:0;transition:opacity 0.3s;pointer-events:none;letter-spacing:0.1px}
+.refresh-toast.show{opacity:1}
 
-	.progress-card{display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid #f2f4f7}
-	.progress-card:last-child{border-bottom:none}
-	.progress-card .p-info{flex:1;min-width:0}
-	.progress-card .p-name{font-size:11.5px;font-weight:600;color:#344054;margin-bottom:3px}
-	.progress-card .p-meta{font-size:10px;color:#98a2b3}
-	.progress-card .p-val{font-size:13px;font-weight:700;text-align:right;white-space:nowrap}
+.progress-card{display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid #f2f4f7}
+.progress-card:last-child{border-bottom:none}
+.progress-card .p-info{flex:1;min-width:0}
+.progress-card .p-name{font-size:11.5px;font-weight:600;color:#344054;margin-bottom:3px}
+.progress-card .p-meta{font-size:10px;color:#98a2b3}
+.progress-card .p-val{font-size:13px;font-weight:700;text-align:right;white-space:nowrap}
 
-	@media(max-width:1200px){
-	  .stat-row{grid-template-columns:repeat(3,1fr)}
-	  .grid-2,.grid-2r,.grid-2l{grid-template-columns:1fr}
-	  .grid-3{grid-template-columns:1fr 1fr}
-	  .export-panel{grid-template-columns:repeat(2,1fr)}
-	}
-	@media(max-width:768px){
-	  .stat-row{grid-template-columns:repeat(2,1fr)}
-	  .grid-3{grid-template-columns:1fr}
-	  .export-panel{grid-template-columns:1fr}
-	  .topbar .nav-links span{padding:15px 12px;font-size:11px}
-	}
-	</style>
+@media(max-width:1200px){
+  .stat-row{grid-template-columns:repeat(3,1fr)}
+  .grid-2,.grid-2r,.grid-2l{grid-template-columns:1fr}
+  .grid-3{grid-template-columns:1fr 1fr}
+  .export-panel{grid-template-columns:repeat(2,1fr)}
+}
+@media(max-width:768px){
+  .stat-row{grid-template-columns:repeat(2,1fr)}
+  .grid-3{grid-template-columns:1fr}
+  .export-panel{grid-template-columns:1fr}
+  .topbar .nav-links span{padding:15px 12px;font-size:11px}
+}
+</style>
 </head>
 <body>
 
@@ -709,39 +698,39 @@ function initTabs(){
 function initStats(){
   var s=D.stats.supply;
   document.getElementById('statSupply').innerHTML =
-    '<div class="stat-card accent-teal"><div class="val">'+(s.totalPiles/10000).toFixed(1)+'<span class="unit"> 万</span></div><div class="lbl">监测充电桩总数</div><div class="sub">覆盖全市12家运营商</div></div>'+
-    '<div class="stat-card accent-red"><div class="val">'+s.shortageGrids+'<span class="unit"> 个</span></div><div class="lbl">供给不足网格</div><div class="sub">供需比 ＜0.5，需重点关注</div></div>'+
-    '<div class="stat-card accent-amber"><div class="val">'+s.tightGrids+'<span class="unit"> 个</span></div><div class="lbl">供给偏紧网格</div><div class="sub">供需比 0.5–0.8</div></div>'+
-    '<div class="stat-card accent-green"><div class="val">'+s.vehiclePileRatio+'</div><div class="lbl">全市车桩比</div><div class="sub">全国领先水平</div></div>'+
-    '<div class="stat-card accent-teal"><div class="val">'+s.utilizationRate+'<span class="unit">%</span></div><div class="lbl">整体利用率</div><div class="sub">较上季度 +2.3%</div></div>'+
-    '<div class="stat-card accent-slate"><div class="val">'+s.excessGrids+'<span class="unit"> 个</span></div><div class="lbl">供给过剩网格</div><div class="sub">供需比 ＞1.2，建议控制新建</div></div>';
+    '<div class="stat-card"><div class="val" style="color:#0f766e;">'+(s.totalPiles/10000).toFixed(1)+'<span style="font-size:16px">万</span></div><div class="lbl">监测充电桩总数</div><div class="chg chg-up">覆盖全市12家运营商</div></div>'+
+    '<div class="stat-card"><div class="val" style="color:#d92d20;">'+s.shortageGrids+'<span style="font-size:16px">个</span></div><div class="lbl">供给不足网格</div><div class="chg chg-down">供需比＜0.5，需重点关注</div></div>'+
+    '<div class="stat-card"><div class="val" style="color:#dc6803;">'+s.tightGrids+'<span style="font-size:16px">个</span></div><div class="lbl">供给偏紧网格</div><div class="chg chg-warn">供需比 0.5–0.8</div></div>'+
+    '<div class="stat-card"><div class="val" style="color:#079455;">'+s.vehiclePileRatio+'</div><div class="lbl">全市车桩比</div><div class="chg chg-up">全国领先水平</div></div>'+
+    '<div class="stat-card"><div class="val" style="color:#0f766e;">'+s.utilizationRate+'<span style="font-size:16px">%</span></div><div class="lbl">整体利用率</div><div class="chg chg-up">较上季度 +2.3%</div></div>'+
+    '<div class="stat-card"><div class="val" style="color:#667085;">'+s.excessGrids+'<span style="font-size:16px">个</span></div><div class="lbl">供给过剩网格</div><div class="chg" style="color:#64748b">供需比＞1.2，建议控制新建</div></div>';
 
   var a=D.stats.attribution;
   document.getElementById('statAttr').innerHTML =
-    '<div class="stat-card accent-red"><div class="val">'+a.totalLowEfficiency.toLocaleString()+'<span class="unit"> 个</span></div><div class="lbl">识别低效桩</div><div class="sub">占总量 8.0%</div></div>'+
-    '<div class="stat-card accent-red"><div class="val">'+a.faultCount+'</div><div class="lbl">设备故障</div><div class="sub">已通知运营商修复</div></div>'+
-    '<div class="stat-card accent-red"><div class="val">'+a.competeCount+'</div><div class="lbl">周边竞争</div><div class="sub">竞品冲击致分流</div></div>'+
-    '<div class="stat-card accent-amber"><div class="val">'+a.accessCount+'</div><div class="lbl">可达性下降</div><div class="sub">道路/出入口变化</div></div>'+
-    '<div class="stat-card accent-slate"><div class="val">'+a.bizCount+'</div><div class="lbl">业态变化</div><div class="sub">周边商业/人口减少</div></div>'+
-    '<div class="stat-card accent-green"><div class="val">'+a.priceCount+'</div><div class="lbl">价格因素</div><div class="sub">收费高于周边均价</div></div>';
+    '<div class="stat-card"><div class="val" style="color:#d92d20;">'+a.totalLowEfficiency.toLocaleString()+'<span style="font-size:16px">个</span></div><div class="lbl">识别低效桩</div><div class="chg chg-down">占总量 8.0%</div></div>'+
+    '<div class="stat-card"><div class="val" style="color:#d92d20;">'+a.faultCount+'</div><div class="lbl">设备故障</div><div class="lbl" style="color:#94a3b8">已通知运营商修复</div></div>'+
+    '<div class="stat-card"><div class="val" style="color:#d92d20;">'+a.competeCount+'</div><div class="lbl">周边竞争</div><div class="lbl" style="color:#94a3b8">竞品冲击致分流</div></div>'+
+    '<div class="stat-card"><div class="val" style="color:#dc6803;">'+a.accessCount+'</div><div class="lbl">可达性下降</div><div class="lbl" style="color:#94a3b8">道路/出入口变化</div></div>'+
+    '<div class="stat-card"><div class="val" style="color:#667085;">'+a.bizCount+'</div><div class="lbl">业态变化</div><div class="lbl" style="color:#94a3b8">周边商业/人口减少</div></div>'+
+    '<div class="stat-card"><div class="val" style="color:#079455;">'+a.priceCount+'</div><div class="lbl">价格因素</div><div class="lbl" style="color:#94a3b8">收费高于周边均价</div></div>';
 
   var v=D.stats.verify;
   document.getElementById('statVerify').innerHTML =
-    '<div class="stat-card accent-teal"><div class="val">'+v.operatorCount+'<span class="unit"> 家</span></div><div class="lbl">接入运营商</div><div class="sub">市级平台全覆盖</div></div>'+
-    '<div class="stat-card accent-red"><div class="val">'+v.highDeviationRate+'<span class="unit">%</span></div><div class="lbl">申报偏离度 ＞15%</div><div class="sub">共1,924个站点</div></div>'+
-    '<div class="stat-card accent-amber"><div class="val">'+v.midDeviationRate+'<span class="unit">%</span></div><div class="lbl">申报偏离度 10%–15%</div><div class="sub">共716个站点</div></div>'+
-    '<div class="stat-card accent-green"><div class="val">'+v.normalRate+'<span class="unit">%</span></div><div class="lbl">申报与基准一致</div><div class="sub">共20,460个站点</div></div>'+
-    '<div class="stat-card accent-red"><div class="val">'+v.contradictionSites+'<span class="unit"> 个</span></div><div class="lbl">状态矛盾站点</div><div class="sub">API显示故障但有充电记录</div></div>'+
-    '<div class="stat-card accent-teal"><div class="val">'+v.reportCycle+'</div><div class="lbl">核验报告周期</div><div class="sub">自动生成并推送</div></div>';
+    '<div class="stat-card"><div class="val" style="color:#0f766e;">'+v.operatorCount+'<span style="font-size:16px">家</span></div><div class="lbl">接入运营商</div><div class="chg chg-up">市级平台全覆盖</div></div>'+
+    '<div class="stat-card"><div class="val" style="color:#d92d20;">'+v.highDeviationRate+'<span style="font-size:16px">%</span></div><div class="lbl">申报偏离度＞15%的站点</div><div class="chg chg-down">共1,924个站点</div></div>'+
+    '<div class="stat-card"><div class="val" style="color:#dc6803;">'+v.midDeviationRate+'<span style="font-size:16px">%</span></div><div class="lbl">申报偏离度10%–15%的站点</div><div class="chg chg-warn">共716个站点</div></div>'+
+    '<div class="stat-card"><div class="val" style="color:#079455;">'+v.normalRate+'<span style="font-size:16px">%</span></div><div class="lbl">申报与基准一致</div><div class="chg chg-up">共20,460个站点</div></div>'+
+    '<div class="stat-card"><div class="val" style="color:#d92d20;">'+v.contradictionSites+'<span style="font-size:16px">个</span></div><div class="lbl">状态矛盾站点</div><div class="chg chg-down">API显示故障但有充电记录</div></div>'+
+    '<div class="stat-card"><div class="val" style="color:#0f766e;">'+v.reportCycle+'</div><div class="lbl">核验报告周期</div><div class="lbl" style="color:#64748b">自动生成并推送</div></div>';
 
   var r=D.report.q2Summary;
   document.getElementById('statReport').innerHTML =
-    '<div class="stat-card accent-teal"><div class="val">'+r.totalKwh.toLocaleString()+'<span class="unit"> 万</span></div><div class="lbl">Q2 总充电量（kWh）</div><div class="sub">同比 +18.3%</div></div>'+
-    '<div class="stat-card accent-green"><div class="val">'+r.supplyDemandAvg+'</div><div class="lbl">全市供需比均值</div><div class="sub">较 Q1 +0.04</div></div>'+
-    '<div class="stat-card accent-amber"><div class="val">'+r.complianceRate+'<span class="unit">%</span></div><div class="lbl">补贴申报合规率</div><div class="sub">较 Q1 +1.7%</div></div>'+
-    '<div class="stat-card accent-red"><div class="val">'+r.lowEffPiles.toLocaleString()+'</div><div class="lbl">低效桩数量</div><div class="sub">较 Q1 +5.2%</div></div>'+
-    '<div class="stat-card accent-slate"><div class="val">'+r.shortageGrids+'<span class="unit"> 个</span></div><div class="lbl">供给不足网格</div><div class="sub">较 Q1 -3 个（治理见效）</div></div>'+
-    '<div class="stat-card accent-red"><div class="val">'+r.anomalySites+'<span class="unit"> 个</span></div><div class="lbl">交叉验证标记异常</div><div class="sub">需重点核查</div></div>';
+    '<div class="stat-card"><div class="val" style="color:#0f766e;">'+r.totalKwh.toLocaleString()+'<span style="font-size:16px">万</span></div><div class="lbl">Q2总充电量（kWh）</div><div class="chg chg-up">同比 +18.3%</div></div>'+
+    '<div class="stat-card"><div class="val" style="color:#079455;">'+r.supplyDemandAvg+'</div><div class="lbl">全市供需比均值</div><div class="chg chg-up">较Q1 +0.04</div></div>'+
+    '<div class="stat-card"><div class="val" style="color:#dc6803;">'+r.complianceRate+'<span style="font-size:16px">%</span></div><div class="lbl">补贴申报合规率</div><div class="chg chg-up">较Q1 +1.7%</div></div>'+
+    '<div class="stat-card"><div class="val" style="color:#d92d20;">'+r.lowEffPiles.toLocaleString()+'</div><div class="lbl">低效桩数量</div><div class="chg chg-down">较Q1 +5.2%</div></div>'+
+    '<div class="stat-card"><div class="val" style="color:#667085;">'+r.shortageGrids+'<span style="font-size:16px">个</span></div><div class="lbl">供给不足网格</div><div class="chg chg-up">较Q1 −3个（治理见效）</div></div>'+
+    '<div class="stat-card"><div class="val" style="color:#d92d20;">'+r.anomalySites+'<span style="font-size:16px">个</span></div><div class="lbl">交叉验证标记异常</div><div class="chg chg-warn">需重点核查</div></div>';
 }
 
 // =============================================================
@@ -835,7 +824,7 @@ function initMaps(){
   fetch('https://geo.datav.aliyun.com/areas_v3/bound/310000_full.json')
     .then(function(r){return r.json()})
     .then(function(geo){
-      L.geoJSON(geo,{style:{color:'#98a2b3',weight:1,fillOpacity:0.03,fillColor:'#0f766e'},onEachFeature:function(f,l){l.bindPopup(f.properties.name)}}).addTo(map1);
+      L.geoJSON(geo,{style:{color:'#94a3b8',weight:1,fillOpacity:0.03,fillColor:'#0f766e'},onEachFeature:function(f,l){l.bindPopup(f.properties.name)}}).addTo(map1);
     }).catch(function(){});
 
   var typeColors={shortage:'#d92d20',tight:'#dc6803',balanced:'#079455',excess:'#0f766e'};
@@ -855,10 +844,10 @@ function initMaps(){
   fetch('https://geo.datav.aliyun.com/areas_v3/bound/310000_full.json')
     .then(function(r){return r.json()})
     .then(function(geo){
-      L.geoJSON(geo,{style:{color:'#98a2b3',weight:1,fillOpacity:0.03,fillColor:'#0f766e'}}).addTo(map2);
+      L.geoJSON(geo,{style:{color:'#94a3b8',weight:1,fillOpacity:0.03,fillColor:'#0f766e'}}).addTo(map2);
     }).catch(function(){});
 
-  var attrColors={fault:'#d92d20',compete:'#f04438',access:'#dc6803',biz:'#667085',price:'#079455'};
+  var attrColors={fault:'#d92d20',compete:'#d92d20',access:'#dc6803',biz:'#667085',price:'#079455'};
   var attrLabels={fault:'设备故障',compete:'周边竞争',access:'可达性下降',biz:'业态变化',price:'价格因素'};
   D.attribution.mapData.forEach(function(d){
     L.circleMarker([d.lat,d.lng],{radius:7,color:attrColors[d.type],fillColor:attrColors[d.type],fillOpacity:0.55,weight:2})
@@ -895,7 +884,7 @@ function initCharts(){
       {name:'奉贤',type:'line',data:su.supplyTrend.fengxian,lineStyle:{color:C.slate,width:1.5},itemStyle:{color:C.slate},symbol:'circle',symbolSize:5,smooth:true}
     ]});
 
-  var pieColors=[C.teal,'#99f6e4',C.green,'#6ee7b7',C.amber,C.slate];
+  var pieColors=[C.teal,'#60a5fa',C.green,'#34d399',C.amber,C.gray];
   initChart('chOperatorShare',{
     tooltip:{trigger:'item'},legend:{bottom:0,textStyle:{fontSize:10}},
     series:[{type:'pie',radius:['45%','72%'],center:['50%','45%'],label:{fontSize:10},
@@ -910,7 +899,7 @@ function initCharts(){
       {name:'供给能力',type:'bar',data:su.peakGap.supply,itemStyle:{color:C.teal,barBorderRadius:[4,4,0,0]},barWidth:24,barGap:'30%'},
       {name:'实际需求',type:'bar',data:su.peakGap.demand,itemStyle:{color:C.red,barBorderRadius:[4,4,0,0]},barWidth:24}]});
 
-  var attrPieColors=['#d92d20','#f04438','#dc6803','#667085','#079455'];
+  var attrPieColors=['#d92d20',C.red,C.amber,C.slate,C.green];
   initChart('chAttrPie',{
     tooltip:{trigger:'item'},legend:{bottom:0,textStyle:{fontSize:10}},
     series:[{type:'pie',radius:'58%',center:['50%','45%'],label:{fontSize:10},
@@ -950,7 +939,7 @@ function initCharts(){
     xAxis:{type:'category',data:ve.abnormalTrend.months,axisLabel:{fontSize:10}},
     yAxis:{type:'value',name:'站点数',axisLabel:{fontSize:10}},
     series:[
-      {name:'偏离＞15%',type:'line',data:ve.abnormalTrend.highDev,lineStyle:{color:C.red,width:1.5},itemStyle:{color:C.red},symbol:'circle',symbolSize:5,areaStyle:{color:'rgba(217,45,32,0.06)'},smooth:true},
+      {name:'偏离＞15%',type:'line',data:ve.abnormalTrend.highDev,lineStyle:{color:C.red,width:1.5},itemStyle:{color:C.red},symbol:'circle',symbolSize:5,areaStyle:{color:'rgba(220,38,38,0.05)'},smooth:true},
       {name:'API状态矛盾',type:'line',data:ve.abnormalTrend.apiConflict,lineStyle:{color:C.amber,width:1.5},itemStyle:{color:C.amber},symbol:'circle',symbolSize:5,smooth:true}]});
 
   initChart('chRptSupply',{
@@ -969,7 +958,7 @@ function initCharts(){
     xAxis:{type:'category',data:rp.rptAttr.categories,axisLabel:{fontSize:10}},
     yAxis:{type:'value',name:'数量',axisLabel:{fontSize:10}},
     series:[
-      {name:'Q1',type:'bar',data:rp.rptAttr.q1,itemStyle:{color:'#d0d5dd',barBorderRadius:[4,4,0,0]},barWidth:20,barGap:'30%'},
+      {name:'Q1',type:'bar',data:rp.rptAttr.q1,itemStyle:{color:'#cbd5e1',barBorderRadius:[4,4,0,0]},barWidth:20,barGap:'30%'},
       {name:'Q2',type:'bar',data:rp.rptAttr.q2,itemStyle:{color:C.teal,barBorderRadius:[4,4,0,0]},barWidth:20}]});
 }
 
@@ -1098,151 +1087,27 @@ function exportPDF(level){
 
   // 构建完整报告HTML
   var reportHtml = '<!DOCTYPE html><html lang="zh-CN"><head><meta charset="UTF-8"><title>'+title+'</title>'+
-    '	<style>
-	*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
-	body{font-family:Inter,-apple-system,"PingFang SC","Microsoft YaHei",sans-serif;background:#f5f6f8;color:#101828;font-size:13px;line-height:1.5;min-height:100vh;-webkit-font-smoothing:antialiased}
-
-	/* ── Topbar ──────────────────────────────── */
-	.topbar{background:#101828;height:52px;display:flex;align-items:center;padding:0 24px;justify-content:space-between;position:sticky;top:0;z-index:1000}
-	.topbar .brand{display:flex;align-items:center;gap:10px;font-size:14px;font-weight:600;color:#f8f9fb;letter-spacing:-0.2px}
-	.topbar .brand .dot{width:6px;height:6px;background:#12b76a;border-radius:50%;flex-shrink:0}
-	@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.35}}
-	.topbar .nav-links{display:flex;gap:0}
-	.topbar .nav-links span{cursor:pointer;padding:15px 18px;font-size:12.5px;color:#98a2b3;transition:all 0.15s;white-space:nowrap;font-weight:500;letter-spacing:0.2px;border-bottom:2px solid transparent;margin-bottom:-1px}
-	.topbar .nav-links span:hover{color:#e4e7ec;background:rgba(255,255,255,0.03)}
-	.topbar .nav-links span.active{color:#fff;border-bottom-color:#0f766e;font-weight:600}
-	.topbar .right{display:flex;align-items:center;gap:14px}
-	.topbar .right .live{display:flex;align-items:center;gap:6px;font-size:11px;color:#98a2b3}
-	.topbar .right .live .ts{color:#e4e7ec;font-variant-numeric:tabular-nums;font-size:12px}
-	.topbar .right .countdown{font-size:10px;color:#667085;min-width:42px;text-align:right}
-	.topbar .right .refresh-btn{cursor:pointer;display:flex;align-items:center;gap:5px;padding:5px 12px;background:rgba(15,118,110,0.12);border:1px solid rgba(15,118,110,0.25);color:#5ee6d4;border-radius:5px;font-size:11px;font-weight:500;transition:all 0.15s;white-space:nowrap}
-	.topbar .right .refresh-btn:hover{background:rgba(15,118,110,0.22);border-color:rgba(15,118,110,0.45);color:#99f6e4}
-	@keyframes spin{100%{transform:rotate(360deg)}}
-	.topbar .right .refresh-btn .icon{display:inline-block;font-size:12px;transition:transform 0.6s}
-	.topbar .right .refresh-btn.spinning .icon{animation:spin 0.6s ease-in-out}
-
-	/* ── Layout ────────────────────────────────── */
-	.main{padding:22px 24px;max-width:1520px;margin:0 auto}
-	.tab-content{display:none}
-	.tab-content.active{display:block}
-
-	/* ── Stat Row ──────────────────────────────── */
-	.stat-row{display:grid;grid-template-columns:repeat(6,1fr);gap:12px;margin-bottom:18px}
-	.stat-card{background:#fff;border-radius:8px;padding:16px 18px;border:1px solid #eaecf0;transition:box-shadow 0.15s}
-	.stat-card:hover{box-shadow:0 2px 8px rgba(16,24,40,0.06)}
-	.stat-card .val{font-size:26px;font-weight:700;line-height:1.15;color:#101828;letter-spacing:-0.3px;margin-bottom:2px}
-	.stat-card .val .unit{font-size:12px;font-weight:500;color:#98a2b3;margin-left:2px}
-	.stat-card .lbl{font-size:11px;color:#667085;letter-spacing:0.1px;font-weight:500}
-	.stat-card .sub{font-size:10px;color:#98a2b3;margin-top:3px}
-	.stat-card.accent-red{border-left:3px solid #d92d20}
-	.stat-card.accent-amber{border-left:3px solid #dc6803}
-	.stat-card.accent-green{border-left:3px solid #079455}
-	.stat-card.accent-teal{border-left:3px solid #0f766e}
-	.stat-card.accent-slate{border-left:3px solid #667085}
-
-	/* ── Grid & Card ────────────────────────────── */
-	.grid{display:grid;gap:16px;margin-bottom:16px}
-	.grid-2{grid-template-columns:1fr 1fr}
-	.grid-3{grid-template-columns:1fr 1fr 1fr}
-	.grid-2r{grid-template-columns:2fr 1fr}
-	.grid-2l{grid-template-columns:1fr 2fr}
-
-	.card{background:#fff;border-radius:8px;border:1px solid #eaecf0;overflow:hidden;box-shadow:0 1px 3px rgba(16,24,40,0.04)}
-	.card-hd{padding:13px 18px;border-bottom:1px solid #f2f4f7;display:flex;justify-content:space-between;align-items:center;font-size:12.5px;font-weight:600;color:#101828;letter-spacing:0.1px}
-	.card-bd{padding:14px;overflow-x:auto}
-	.card-bd0{padding:0;overflow-x:auto}
-
-	/* ── Charts ─────────────────────────────────── */
-	.chart{width:100%;overflow:hidden}
-	.chart.h420{height:420px}.chart.h360{height:360px}.chart.h300{height:300px}.chart.h260{height:260px}.chart.h220{height:220px}
-
-	/* ── Tables ─────────────────────────────────── */
-	.tbl{width:100%;min-width:500px;border-collapse:collapse;font-size:12px}
-	.tbl th{background:#f9fafb;color:#667085;font-weight:600;padding:9px 12px;border-bottom:1px solid #eaecf0;text-align:left;font-size:10.5px;letter-spacing:0.3px;text-transform:uppercase}
-	.tbl td{padding:8px 12px;border-bottom:1px solid #f2f4f7;color:#344054;vertical-align:top;font-size:12px}
-	.tbl tbody tr:hover td{background:#f9fafb}
-	.tbl .num{text-align:right;font-variant-numeric:tabular-nums;font-family:"SF Mono","JetBrains Mono","Consolas",monospace;font-size:11.5px}
-
-	/* ── Badges ─────────────────────────────────── */
-	.badge{display:inline-block;padding:2px 8px;border-radius:5px;font-size:10px;font-weight:600;white-space:nowrap;letter-spacing:0.1px}
-	.badge-r{background:#fef3f2;color:#b42318}
-	.badge-o{background:#fffaeb;color:#b54708}
-	.badge-g{background:#ecfdf3;color:#067647}
-	.badge-b{background:#f0fdfa;color:#0f766e}
-	.badge-p{background:#f8f9fc;color:#475569}
-
-	/* ── Maps ───────────────────────────────────── */
-	#map,#map2{width:100%;height:460px;border-radius:4px}
-	.legend-inline{display:flex;gap:18px;font-size:10.5px;color:#667085;padding:8px 16px;flex-wrap:wrap;align-items:center}
-	.legend-inline .dot{width:9px;height:9px;border-radius:50%;display:inline-block;margin-right:4px;vertical-align:middle}
-
-	/* ── Report Sections ────────────────────────── */
-	.rpt-section{margin-bottom:26px}
-	.rpt-section h3{font-size:14px;font-weight:700;color:#101828;margin-bottom:12px;padding-bottom:8px;border-bottom:1px solid #eaecf0;display:flex;align-items:center;gap:9px;letter-spacing:-0.1px}
-	.rpt-section h3 .num{display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;border-radius:6px;background:#0f766e;color:#fff;font-size:11px;font-weight:700;flex-shrink:0}
-	.rpt-card{background:#fafbfc;border:1px solid #eaecf0;border-radius:8px;padding:20px;margin-bottom:12px;transition:box-shadow 0.15s}
-	.rpt-card:hover{box-shadow:0 1px 4px rgba(16,24,40,0.04)}
-	.rpt-card h4{font-size:12.5px;font-weight:600;color:#101828;margin-bottom:10px}
-	.rpt-card p{font-size:12px;color:#475569;line-height:1.85}
-	.rpt-insight{background:#f0fdfa;border-left:3px solid #0f766e;padding:12px 16px;margin:12px 0;font-size:12px;color:#134e4a;border-radius:0 6px 6px 0;line-height:1.8}
-	.rpt-warn{background:#fef3f2;border-left:3px solid #d92d20;padding:12px 16px;margin:12px 0;font-size:12px;color:#7a271a;border-radius:0 6px 6px 0;line-height:1.8}
-
-	/* ── Export Cards ───────────────────────────── */
-	.export-panel{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px}
-	.export-card{background:#fff;border:1px solid #eaecf0;border-radius:8px;padding:20px;cursor:pointer;transition:all 0.2s;position:relative;overflow:hidden}
-	.export-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:#0f766e;opacity:0;transition:opacity 0.2s}
-	.export-card:hover{border-color:#0f766e;box-shadow:0 4px 16px rgba(15,118,110,0.08);transform:translateY(-1px)}
-	.export-card:hover::before{opacity:1}
-	.export-card .ec-level{font-size:10px;font-weight:700;color:#0f766e;letter-spacing:0.8px;text-transform:uppercase;margin-bottom:8px}
-	.export-card .ec-title{font-size:13px;font-weight:600;color:#101828;margin-bottom:4px;letter-spacing:-0.1px}
-	.export-card .ec-desc{font-size:11px;color:#98a2b3;line-height:1.5;margin-bottom:10px}
-	.export-card .ec-action{display:inline-flex;align-items:center;gap:4px;font-size:10.5px;font-weight:600;color:#0f766e;letter-spacing:0.2px}
-	.export-card .ec-action .arr{transition:transform 0.2s}
-	.export-card:hover .ec-action .arr{transform:translateX(3px)}
-
-	/* ── Misc ───────────────────────────────────── */
-	::-webkit-scrollbar{width:5px}
-	::-webkit-scrollbar-track{background:transparent}
-	::-webkit-scrollbar-thumb{background:#d0d5dd;border-radius:3px}
-
-	.filter-bar{display:flex;gap:8px;align-items:center;font-size:11px;flex-wrap:wrap}
-	.filter-bar select,.filter-bar input{border:1px solid #d0d5dd;border-radius:5px;padding:5px 10px;font-size:11px;color:#344054;background:#fff;transition:border-color 0.15s}
-	.filter-bar select:focus,.filter-bar input:focus{outline:none;border-color:#0f766e;box-shadow:0 0 0 3px rgba(15,118,110,0.08)}
-
-	.footbar{background:#fff;border-top:1px solid #eaecf0;padding:10px 24px;font-size:10.5px;color:#98a2b3;display:flex;justify-content:space-between;letter-spacing:0.1px}
-
-	.tag-row{display:flex;gap:5px;flex-wrap:wrap}
-	.tag{display:inline-block;padding:2px 8px;border-radius:4px;font-size:10px;font-weight:600;white-space:nowrap;letter-spacing:0.1px}
-	.tag-fault{background:#fef3f2;color:#b42318}.tag-comp{background:#fef3f2;color:#d92d20}
-	.tag-access{background:#fffaeb;color:#b54708}.tag-biz{background:#f8f9fc;color:#475569}
-	.tag-price{background:#ecfdf3;color:#067647}
-
-	.bar-wrap{background:#f2f4f7;border-radius:4px;height:6px;overflow:hidden;margin-top:5px}
-	.bar-fill{border-radius:4px;height:100%;transition:width 0.6s ease}
-
-	.refresh-toast{position:fixed;top:64px;left:50%;transform:translateX(-50%);background:#101828;color:#fff;padding:8px 20px;border-radius:6px;font-size:11px;z-index:9999;opacity:0;transition:opacity 0.3s;pointer-events:none;letter-spacing:0.1px}
-	.refresh-toast.show{opacity:1}
-
-	.progress-card{display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid #f2f4f7}
-	.progress-card:last-child{border-bottom:none}
-	.progress-card .p-info{flex:1;min-width:0}
-	.progress-card .p-name{font-size:11.5px;font-weight:600;color:#344054;margin-bottom:3px}
-	.progress-card .p-meta{font-size:10px;color:#98a2b3}
-	.progress-card .p-val{font-size:13px;font-weight:700;text-align:right;white-space:nowrap}
-
-	@media(max-width:1200px){
-	  .stat-row{grid-template-columns:repeat(3,1fr)}
-	  .grid-2,.grid-2r,.grid-2l{grid-template-columns:1fr}
-	  .grid-3{grid-template-columns:1fr 1fr}
-	  .export-panel{grid-template-columns:repeat(2,1fr)}
-	}
-	@media(max-width:768px){
-	  .stat-row{grid-template-columns:repeat(2,1fr)}
-	  .grid-3{grid-template-columns:1fr}
-	  .export-panel{grid-template-columns:1fr}
-	  .topbar .nav-links span{padding:15px 12px;font-size:11px}
-	}
-	</style></head><body>'+
+    '<style>'+
+    '*{margin:0;padding:0;box-sizing:border-box}'+
+    'body{font-family:"PingFang SC","Microsoft YaHei","SimSun",sans-serif;color:#1e293b;font-size:13px;line-height:1.8;padding:40px 50px;max-width:210mm;margin:0 auto}'+
+    '.report-head{border-bottom:3px solid #0f766e;padding-bottom:16px;margin-bottom:24px}'+
+    '.report-head h1{font-size:22px;color:#0f172a;margin-bottom:6px}'+
+    '.report-head .meta{font-size:11px;color:#94a3b8}'+
+    'h3{font-size:15px;color:#0f172a;margin:22px 0 10px;padding-left:10px;border-left:3px solid #0f766e}'+
+    'p{margin:8px 0;text-indent:0}'+
+    'b{color:#0f172a}'+
+    'table{width:100%;border-collapse:collapse;margin:12px 0;font-size:11px}'+
+    'th{background:#f1f5f9;color:#475569;font-weight:600;padding:8px 10px;border:1px solid #e2e8f0;text-align:left}'+
+    'td{padding:7px 10px;border:1px solid #e2e8f0;color:#334155}'+
+    'tr:nth-child(even) td{background:#fafbfc}'+
+    '.summary-box{background:#eff6ff;border:1px solid #bfdbfe;border-radius:6px;padding:16px;margin:12px 0}'+
+    '.summary-box h3{margin-top:0;border-left-color:#3b82f6}'+
+    'ol,ul{margin:8px 0;padding-left:24px}'+
+    'li{margin:4px 0}'+
+    '.report-foot{border-top:1px solid #e2e8f0;margin-top:24px;padding-top:12px;font-size:10px;color:#94a3b8}'+
+    '@media print{body{padding:20px 30px}'+
+    '@page{size:A4;margin:15mm}'+
+    '}</style></head><body>'+
     '<div class="report-head"><h1>'+title+'</h1>'+
     '<div class="meta">「桩探」数据驱动的行业分析报告引擎 · 报告生成时间：'+timeStr+' · 数据来源：D1市级充电量平台 / D2运营商公开API / D3高德百度地图 / D4 12345热线 / D5用户评论</div></div>'+
     bodyHtml+
@@ -1282,9 +1147,9 @@ function exportPDF(level){
 }
 
 function flashCard(el){
-  el.style.borderColor='#0f766e';
+  el.style.borderColor='#12b76a';
   el.style.background='#f0fdfa';
-  setTimeout(function(){el.style.borderColor='#eaecf0';el.style.background='#fff'},800);
+  setTimeout(function(){el.style.borderColor='#e2e8f0';el.style.background='#fff'},800);
 }
 
 // =============================================================
