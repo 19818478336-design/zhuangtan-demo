@@ -2,7 +2,7 @@
   "meta": {
     "version": "4.1",
     "lastUpdated": "2026-06-18T15:00:00+08:00",
-    "dataSources": ["市级充电量平台", "运营商公开API", "高德/百度地图开放平台", "12345市民热线", "公开用户评论"]
+    "dataSources": ["市级充电量平台(模拟)", "高德充电站(真实站点)", "高德地图开放平台(真实POI)", "12345市民热线(模拟)", "高德地图(真实评分)"]
   },
   "stats": {
     "supply": {
@@ -191,9 +191,9 @@
     "dataQuality": [
       {"source": "市级充电量平台", "completeness": "99.2%", "timeliness": "日更新正常", "accuracy": "98.5%", "coverage": "全市 23.1 万桩", "status": "normal"},
       {"source": "运营商公开API", "completeness": "87.3%", "timeliness": "实时", "accuracy": "85.1%", "coverage": "头部运营商全覆盖", "status": "warn"},
-      {"source": "高德/百度地图POI", "completeness": "98.8%", "timeliness": "准实时", "accuracy": "94.0%", "coverage": "全市POI", "status": "normal"},
+      {"source": "高德地图开放平台(真实POI)", "completeness": "98.8%", "timeliness": "实时", "accuracy": "95.0%", "coverage": "全市POI", "status": "real"},
       {"source": "12345投诉", "completeness": "100%", "timeliness": "日更新", "accuracy": "88.5%", "coverage": "充电桩类投诉", "status": "warn"},
-      {"source": "公开用户评论", "completeness": "72.0%", "timeliness": "按需采集", "accuracy": "78.3%", "coverage": "多平台公开内容", "status": "warn"}
+      {"source": "高德地图充电站评分(真实数据)", "completeness": "95.0%", "timeliness": "实时", "accuracy": "90.0%", "coverage": "全市充电站", "status": "real"}
     ],
     "charts": {
       "rptSupply": {

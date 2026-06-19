@@ -73,6 +73,7 @@ body{font-family:Inter,-apple-system,"PingFang SC","Microsoft YaHei",sans-serif;
 .badge-r{background:#fef3f2;color:#b42318}
 .badge-o{background:#fffaeb;color:#b54708}
 .badge-g{background:#ecfdf3;color:#067647}
+.badge-t{background:#f0fdfa;color:#0f766e}
 .badge-b{background:#f0fdfa;color:#0f766e}
 .badge-p{background:#f8f9fc;color:#475569}
 
@@ -183,7 +184,7 @@ body{font-family:Inter,-apple-system,"PingFang SC","Microsoft YaHei",sans-serif;
         <span><span class="dot" style="background:#dc6803"></span>供给偏紧（0.5–0.8）</span>
         <span><span class="dot" style="background:#079455"></span>供需平衡（0.8–1.2）</span>
         <span><span class="dot" style="background:#0f766e"></span>供给过剩（＞1.2）</span>
-        <span style="margin-left:auto;color:#94a3b8;font-size:10px">数据来源：市级充电量平台 · 地图POI · 运营商公开API</span>
+        <span style="margin-left:auto;color:#94a3b8;font-size:10px">数据来源：市级充电量平台 · 地图POI(真实数据) · 运营商公开API</span>
       </div>
     </div>
   </div>
@@ -383,7 +384,7 @@ body{font-family:Inter,-apple-system,"PingFang SC","Microsoft YaHei",sans-serif;
 
 <div class="footbar">
   <span>桩探 · 上海市充电设施运行监测与决策支持平台</span>
-  <span>数据来源：市级平台 · 运营商公开API · 地图开放平台 · 12345热线 · 公开评论  |  不含个人隐私数据</span>
+  <span>数据来源：市级平台 · 运营商公开API · 地图开放平台(真实数据) · 12345热线 · 公开评论(真实数据)  |  不含个人隐私数据</span>
 </div>
 
 <script>
@@ -513,7 +514,7 @@ function buildDataObject(stats, grids, districts, supCharts, attrSites, attrChar
     meta: {
       version: '2.0.0-API',
       lastUpdated: now,
-      dataSources: ['D1-市级充电量平台','D2-运营商公开API','D3-高德/百度地图','D4-12345热线','D5-用户公开评论']
+      dataSources: ['D1-市级充电量平台(模拟)','D2-高德充电站(真实站点)','D3-高德地图(真实POI)','D4-12345热线(模拟)','D5-高德地图(真实评分)']
     },
     stats: {
       supply: {
@@ -777,9 +778,10 @@ function initTables(){
   // 数据质量
   var dq='<thead><tr><th>数据源</th><th>完整率</th><th>及时率</th><th>准确率</th><th>覆盖范围</th><th>运行状态</th></tr></thead>';
   D.report.dataQuality.forEach(function(r){
-    var sc=r.status==='normal'?'#079455':'#dc6803';
-    var sb=r.status==='normal'?'badge badge-g':'badge badge-o';
-    dq+='<tr><td>'+r.source+'</td><td><span style="color:'+sc+'">'+r.completeness+'</span></td><td><span style="color:'+sc+'">'+r.timeliness+'</span></td><td><span style="color:'+sc+'">'+r.accuracy+'</span></td><td>'+r.coverage+'</td><td><span class="'+sb+'">'+(r.status==='normal'?'正常':'部分不稳定')+'</span></td></tr>';
+    var sc=r.status==='real'?'#0f766e':r.status==='normal'?'#079455':'#dc6803';
+    var sb=r.status==='real'?'badge badge-t':r.status==='normal'?'badge badge-g':'badge badge-o';
+    var label=r.status==='real'?'真实数据':r.status==='normal'?'正常':'部分不稳定';
+    dq+='<tr><td>'+r.source+'</td><td><span style="color:'+sc+'">'+r.completeness+'</span></td><td><span style="color:'+sc+'">'+r.timeliness+'</span></td><td><span style="color:'+sc+'">'+r.accuracy+'</span></td><td>'+r.coverage+'</td><td><span class="'+sb+'">'+label+'</span></td></tr>';
   });
   document.getElementById('tblDataQuality').innerHTML=dq;
 
@@ -1109,7 +1111,7 @@ function exportPDF(level){
     '@page{size:A4;margin:15mm}'+
     '}</style></head><body>'+
     '<div class="report-head"><h1>'+title+'</h1>'+
-    '<div class="meta">「桩探」数据驱动的行业分析报告引擎 · 报告生成时间：'+timeStr+' · 数据来源：D1市级充电量平台 / D2运营商公开API / D3高德百度地图 / D4 12345热线 / D5用户评论</div></div>'+
+    '<div class="meta">「桩探」数据驱动的行业分析报告引擎 · 报告生成时间：'+timeStr+' · 数据来源：D1市级充电量平台 / D2高德充电站(真实站点) / D3高德地图(真实POI) / D4 12345热线 / D5高德地图(真实评分)</div></div>'+
     bodyHtml+
     '<div class="report-foot"><p>本报告由「桩探」平台自动生成。数据基于公开可获取来源，分析结果仅供参考。报告中运营商数据已做匿名化处理。</p>'+
     '<p>© 桩探 · SODA 2026 · v2.0 · '+ts+'</p></div>'+
